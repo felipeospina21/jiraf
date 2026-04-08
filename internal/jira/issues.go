@@ -3,6 +3,7 @@ package jira
 import (
 	"fmt"
 	"net/url"
+	"time"
 )
 
 const issueFields = "summary,status,priority,issuetype,assignee,reporter,created,updated,duedate,labels,components,fixVersions,subtasks,comment,sprint"
@@ -10,6 +11,7 @@ const issueFields = "summary,status,priority,issuetype,assignee,reporter,created
 // GetMyIssues fetches issues assigned to the current user for a given project key.
 func (c *Client) GetMyIssues(projectKey string) ([]Issue, error) {
 	if c.devMode {
+		time.Sleep(1 * time.Second)
 		return MockIssues, nil
 	}
 
