@@ -9,6 +9,7 @@ import (
 	"github.com/felipeospina21/mrjira/internal/config"
 	"github.com/felipeospina21/mrjira/internal/jira"
 	"github.com/felipeospina21/mrjira/internal/tui/boards"
+	"github.com/felipeospina21/mrjira/internal/tui/icon"
 	"github.com/felipeospina21/mrjira/internal/tui/issues"
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/shell"
@@ -39,14 +40,15 @@ func NewApp() tea.Model {
 	}
 
 	client := jira.NewClient(cfg)
-	left := boards.New(cfg.Filters.Boards)
+	b := boards.New(cfg.Filters.Boards)
+	left := BoardsPanel{Model: &b}
 	main := issues.New()
 
 	s := shell.New(shell.Config{
 		Theme:          theme,
 		LeftPanel:      left,
 		MainPanel:      main,
-		StatusLabel:    "🎫 mrjira",
+		AppIcon:        icon.Jira,
 		Keybinds:       tuishell.GlobalKeys(cfg.DevMode),
 		DevMode:        cfg.DevMode,
 		LeftPanelWidth: 30,
@@ -70,17 +72,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			main.SpinnerView = m.Shell.Spinner.View()
 			m.Shell.Main = main
 		}
-		return m, func() tea.Msg { return tuishell.StartTaskMsg{Cmd: m.fetchIssues(msg.Key)} }
+		return m, tea.Batch(
+			func() tea.Msg { return tuishell.CloseLeftPanelMsg{} },
+			func() tea.Msg { return tuishell.StartTaskMsg{Cmd: m.fetchIssues(msg.Key)} },
+		)
 
-	case issues.FetchedMsg:
-		// Clear loading state and route to main panel
+	case tuishell.FinishTaskMsg:
 		if main, ok := m.Shell.Main.(issues.Model); ok {
 			main.Loading = false
 			m.Shell.Main = main
 		}
-		var cmd tea.Cmd
-		m.Shell.Main, cmd = m.Shell.Main.Update(msg)
-		return m, cmd
 	}
 
 	var cmd tea.Cmd

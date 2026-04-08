@@ -6,11 +6,16 @@ var now = time.Now()
 
 func jt(t time.Time) JiraTime { return JiraTime{Time: t} }
 
+func sp(v float64) *float64 { return &v }
+
+var mockSprint = "com.atlassian.greenhopper.service.sprint.Sprint@abc[name=Sprint 42,state=ACTIVE,startDate=2026-04-01T08:00:00.000-05:00,endDate=2026-04-15T08:00:00.000-05:00]"
+
 var MockIssues = []Issue{
 	{
 		Key: "UCP-1042",
 		Fields: IssueFields{
 			Summary:     "Fix session timeout on idle users",
+			Description: "Users are being logged out after 5 minutes of inactivity. The session TTL should be 30 minutes per the auth spec.",
 			Status:      NameField{Name: "In Progress"},
 			Priority:    NameField{Name: "High"},
 			IssueType:   NameField{Name: "Bug"},
@@ -18,19 +23,20 @@ var MockIssues = []Issue{
 			Reporter:    &UserField{DisplayName: "Sarah Chen"},
 			Created:     jt(now.Add(-5 * 24 * time.Hour)),
 			Updated:     jt(now.Add(-2 * time.Hour)),
-			DueDate:     now.Add(3 * 24 * time.Hour).Format("2006-01-02"),
 			Labels:      []string{"backend", "auth"},
 			Components:  []NameField{{Name: "API"}},
 			FixVersions: []NameField{{Name: "v2.3"}},
 			Subtasks:    make([]interface{}, 2),
 			Comment:     CommentField{Total: 4},
-			Sprint:      &SprintField{Name: "Sprint 42"},
+			StoryPoints: sp(5),
+			SprintRaw:   []string{mockSprint},
 		},
 	},
 	{
 		Key: "UCP-1038",
 		Fields: IssueFields{
 			Summary:     "Add pagination to dashboard list endpoint",
+			Description: "The /api/v2/dashboards endpoint returns all results. Add cursor-based pagination with a default page size of 25.",
 			Status:      NameField{Name: "To Do"},
 			Priority:    NameField{Name: "Medium"},
 			IssueType:   NameField{Name: "Story"},
@@ -42,13 +48,15 @@ var MockIssues = []Issue{
 			Components:  []NameField{{Name: "API"}, {Name: "Dashboard"}},
 			FixVersions: []NameField{{Name: "v2.3"}},
 			Comment:     CommentField{Total: 1},
-			Sprint:      &SprintField{Name: "Sprint 42"},
+			StoryPoints: sp(3),
+			SprintRaw:   []string{mockSprint},
 		},
 	},
 	{
 		Key: "UCP-1035",
 		Fields: IssueFields{
 			Summary:     "Migrate user preferences to new schema",
+			Description: "Move user preferences from the legacy key-value table to the new typed preferences schema. Must be backward compatible.",
 			Status:      NameField{Name: "In Review"},
 			Priority:    NameField{Name: "Medium"},
 			IssueType:   NameField{Name: "Task"},
@@ -56,18 +64,19 @@ var MockIssues = []Issue{
 			Reporter:    &UserField{DisplayName: "Maria Lopez"},
 			Created:     jt(now.Add(-12 * 24 * time.Hour)),
 			Updated:     jt(now.Add(-6 * time.Hour)),
-			DueDate:     now.Add(1 * 24 * time.Hour).Format("2006-01-02"),
 			Labels:      []string{"database", "migration"},
 			Components:  []NameField{{Name: "Database"}},
 			Subtasks:    make([]interface{}, 3),
 			Comment:     CommentField{Total: 7},
-			Sprint:      &SprintField{Name: "Sprint 42"},
+			StoryPoints: sp(8),
+			SprintRaw:   []string{mockSprint},
 		},
 	},
 	{
 		Key: "UCP-1029",
 		Fields: IssueFields{
 			Summary:     "Investigate memory spike on report generation",
+			Description: "Heap usage jumps to 4GB when generating the monthly activity report. Profile and identify the allocation hotspot.",
 			Status:      NameField{Name: "In Progress"},
 			Priority:    NameField{Name: "Critical"},
 			IssueType:   NameField{Name: "Bug"},
@@ -78,13 +87,15 @@ var MockIssues = []Issue{
 			Labels:      []string{"performance"},
 			Components:  []NameField{{Name: "Reports"}},
 			Comment:     CommentField{Total: 2},
-			Sprint:      &SprintField{Name: "Sprint 42"},
+			StoryPoints: sp(2),
+			SprintRaw:   []string{mockSprint},
 		},
 	},
 	{
 		Key: "UCP-1021",
 		Fields: IssueFields{
 			Summary:     "Update API docs for v2.3 endpoints",
+			Description: "Document the new endpoints added in v2.3: batch operations, webhook management, and audit log queries.",
 			Status:      NameField{Name: "Done"},
 			Priority:    NameField{Name: "Low"},
 			IssueType:   NameField{Name: "Task"},
@@ -95,7 +106,6 @@ var MockIssues = []Issue{
 			Labels:      []string{"docs"},
 			FixVersions: []NameField{{Name: "v2.3"}},
 			Comment:     CommentField{Total: 0},
-			Sprint:      &SprintField{Name: "Sprint 41"},
 		},
 	},
 }

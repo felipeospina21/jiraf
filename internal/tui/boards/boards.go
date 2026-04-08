@@ -41,6 +41,7 @@ func (m Model) Init() tea.Cmd { return nil }
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		m.List.SetWidth(msg.Width)
 		m.List.SetHeight(msg.Height)
 		return m, nil
 	case tea.KeyPressMsg:
@@ -58,4 +59,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() tea.View {
 	return tea.NewView(m.List.View())
+}
+
+// SelectedLabel implements tuishell.SelectionProvider.
+func (m Model) SelectedLabel() string {
+	if it, ok := m.List.SelectedItem().(item); ok {
+		return it.board.Key
+	}
+	return ""
 }

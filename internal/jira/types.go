@@ -1,6 +1,7 @@
 package jira
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -39,6 +40,7 @@ type Issue struct {
 
 type IssueFields struct {
 	Summary     string        `json:"summary"`
+	Description string        `json:"description"`
 	Status      NameField     `json:"status"`
 	Priority    NameField     `json:"priority"`
 	IssueType   NameField     `json:"issuetype"`
@@ -46,13 +48,36 @@ type IssueFields struct {
 	Reporter    *UserField    `json:"reporter"`
 	Created     JiraTime      `json:"created"`
 	Updated     JiraTime      `json:"updated"`
-	DueDate     string        `json:"duedate"`
 	Labels      []string      `json:"labels"`
 	Components  []NameField   `json:"components"`
 	FixVersions []NameField   `json:"fixVersions"`
 	Subtasks    []interface{} `json:"subtasks"`
 	Comment     CommentField  `json:"comment"`
-	Sprint      *SprintField  `json:"sprint"`
+	StoryPoints *float64      `json:"customfield_10106"`
+	SprintRaw   SprintRawField `json:"customfield_10105"`
+}
+
+// SprintRawField handles the sprint custom field which can be null, a string, or an array of strings.
+type SprintRawField []string
+
+func (s *SprintRawField) UnmarshalJSON(b []byte) error {
+	str := strings.TrimSpace(string(b))
+	if str == "null" || str == "" {
+		return nil
+	}
+	// Try array of strings first
+	var arr []string
+	if err := json.Unmarshal(b, &arr); err == nil {
+		*s = arr
+		return nil
+	}
+	// Try single string
+	var single string
+	if err := json.Unmarshal(b, &single); err == nil {
+		*s = []string{single}
+		return nil
+	}
+	return nil
 }
 
 type NameField struct {
@@ -67,8 +92,53 @@ type CommentField struct {
 	Total int `json:"total"`
 }
 
-type SprintField struct {
-	Name string `json:"name"`
+// Sprint holds parsed sprint data from the Java toString format.
+type Sprint struct {
+	Name      string
+	StartDate string
+	EndDate   string
+}
+
+// ParseSprint extracts name, startDate, and endDate from the Java toString sprint string.
+func ParseSprint(raw string) Sprint {
+	get := func(key string) string {
+		prefix := key + "="
+		idx := strings.Index(raw, prefix)
+		if idx < 0 {
+			return ""
+		}
+		start := idx + len(prefix)
+		rest := raw[start:]
+		end := strings.IndexAny(rest, ",]")
+		if end < 0 {
+			return rest
+		}
+		v := rest[:end]
+		if v == "<null>" {
+			return ""
+		}
+		return v
+	}
+	return Sprint{
+		Name:      get("name"),
+		StartDate: get("startDate"),
+		EndDate:   get("endDate"),
+	}
+}
+
+// ActiveSprint returns the parsed active sprint from SprintRaw, or nil if none.
+func (f IssueFields) ActiveSprint() *Sprint {
+	for _, raw := range f.SprintRaw {
+		if strings.Contains(raw, "state=ACTIVE") {
+			s := ParseSprint(raw)
+			return &s
+		}
+	}
+	if len(f.SprintRaw) > 0 {
+		s := ParseSprint(f.SprintRaw[len(f.SprintRaw)-1])
+		return &s
+	}
+	return nil
 }
 
 type SearchResponse struct {

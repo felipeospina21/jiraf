@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/mrjira/internal/jira"
+	"github.com/felipeospina21/mrjira/internal/tui/icon"
 	"github.com/felipeospina21/tuishell"
-	"github.com/felipeospina21/tuishell/loader"
 	"github.com/felipeospina21/tuishell/style"
 	"github.com/felipeospina21/tuishell/table"
 )
@@ -35,22 +36,24 @@ type FetchedMsg struct {
 }
 
 var cols = []table.Column{
+	{Name: "created", Title: icon.Clock, Width: 3},
+	{Name: "priority", Title: "Priority", Width: 4, Centered: true},
 	{Name: "key", Title: "Key", Width: 8},
-	{Name: "type", Title: "Type", Width: 5},
-	{Name: "priority", Title: "Pri", Width: 4, Centered: true},
 	{Name: "summary", Title: "Summary", Width: 35},
 	{Name: "status", Title: "Status", Width: 10},
+	{Name: "type", Title: "Type", Width: 5},
 	{Name: "assignee", Title: "Assignee", Width: 10},
 	{Name: "reporter", Title: "Reporter", Width: 0},
 	{Name: "labels", Title: "Labels", Width: 0},
 	{Name: "components", Title: "Comp", Width: 0},
 	{Name: "sprint", Title: "Sprint", Width: 10},
-	{Name: "comments", Title: "💬", Width: 3, Centered: true},
-	{Name: "subtasks", Title: "📋", Width: 3, Centered: true},
+	{Name: "sprint_start", Title: "Start", Width: 5},
+	{Name: "sprint_end", Title: "End", Width: 5},
+	{Name: "sp", Title: icon.Weight, Width: 3, Centered: true},
+	{Name: "comments", Title: icon.Comment, Width: 3, Centered: true},
+	{Name: "subtasks", Title: icon.Subtask, Width: 3, Centered: true},
 	{Name: "fixver", Title: "Fix", Width: 0},
-	{Name: "due", Title: "Due", Width: 6},
-	{Name: "created", Title: "Created", Width: 3},
-	{Name: "updated", Title: "Updated", Width: 3},
+	{Name: "updated", Title: icon.UserUpdate, Width: 3},
 }
 
 // Model is the main-panel issues table.
@@ -80,6 +83,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		tableW := m.tableWidth()
 		m.Table.W = tableW
 		m.Table.H = m.height - tableBorderY
+		if len(m.Table.Rows()) > 0 {
+			h := m.height - headerLines - tableBorderY - tableOverhead
+			if h < 3 {
+				h = 3
+			}
+			m.Table.SetColumns(getTableCols(tableW))
+			m.Table.SetWidth(tableW)
+			m.Table.SetHeight(h)
+		}
 		return m, nil
 
 	case FetchedMsg:
@@ -107,11 +119,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		})
 		m.Table.W = tableW
 		m.Table.H = h
-		count := len(msg.Issues)
-		return m, tea.Batch(
-			func() tea.Msg { return tuishell.FinishTaskMsg{Keybinds: tuishell.GlobalKeys(false)} },
-			func() tea.Msg { return tuishell.SetStatusMsg{Content: fmt.Sprintf("%d issues", count)} },
-		)
+		return m, func() tea.Msg {
+			return tuishell.FinishTaskMsg{Err: nil}
+		}
 
 	case tea.KeyPressMsg:
 		var cmd tea.Cmd
@@ -122,16 +132,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() tea.View {
-	header := titleStyle.Render(fmt.Sprintf("%s - Issues", m.SelectedBoard))
-	if m.Loading {
-		loaderView := lipgloss.NewStyle().
-			Width(m.width).
-			Height(m.height - lipgloss.Height(header)).
-			Render(loader.View(theme, m.SpinnerView))
-		return tea.NewView(lipgloss.JoinVertical(0, header, loaderView))
-	}
-	tbl := table.RenderTable(theme, m.Table.View())
-	return tea.NewView(lipgloss.JoinVertical(0, header, tbl))
+	header := fmt.Sprintf("%s - Issues", m.SelectedBoard)
+	return tea.NewView(table.RenderPanel(theme, &m.Table, m.Loading, m.SpinnerView, header))
 }
 
 func (m Model) tableWidth() int {
@@ -147,28 +149,64 @@ func issueToRow(i jira.Issue) table.Row {
 	if f.Reporter != nil {
 		reporter = f.Reporter.DisplayName
 	}
-	sprint := ""
-	if f.Sprint != nil {
-		sprint = f.Sprint.Name
-	}
 	return table.Row{
-		i.Key,
-		f.IssueType.Name,
+		table.FormatTime(f.Created.Time),
 		f.Priority.Name,
+		i.Key,
 		f.Summary,
 		f.Status.Name,
+		f.IssueType.Name,
 		assignee,
 		reporter,
 		strings.Join(f.Labels, ", "),
 		nameList(f.Components),
-		sprint,
+		sprintName(f.ActiveSprint()),
+		sprintDate(f.ActiveSprint(), true),
+		sprintDate(f.ActiveSprint(), false),
+		formatSP(f.StoryPoints),
 		strconv.Itoa(f.Comment.Total),
 		strconv.Itoa(len(f.Subtasks)),
 		nameList(f.FixVersions),
-		f.DueDate,
-		table.FormatTime(f.Created.Time),
 		table.FormatTime(f.Updated.Time),
 	}
+}
+
+func formatSP(sp *float64) string {
+	if sp == nil {
+		return "-"
+	}
+	return strconv.Itoa(int(*sp))
+}
+
+func sprintName(s *jira.Sprint) string {
+	if s == nil {
+		return ""
+	}
+	name := s.Name
+	if before, _, ok := strings.Cut(name, " - "); ok {
+		name = strings.TrimSpace(before)
+	}
+	return strings.TrimPrefix(name, "Sprint ")
+}
+
+func sprintDate(s *jira.Sprint, start bool) string {
+	if s == nil {
+		return ""
+	}
+	d := s.EndDate
+	if start {
+		d = s.StartDate
+	}
+	for _, layout := range []string{
+		"2006-01-02T15:04:05.000-07:00",
+		"2006-01-02T15:04:05.000-0700",
+		time.RFC3339,
+	} {
+		if t, err := time.Parse(layout, d); err == nil {
+			return t.Format("Jan 02")
+		}
+	}
+	return ""
 }
 
 func nameList(items []jira.NameField) string {
