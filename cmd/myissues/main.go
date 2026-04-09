@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/felipeospina21/jiraf/internal/config"
 )
 
 type issue struct {
@@ -22,20 +22,24 @@ type issue struct {
 }
 
 func main() {
-	_ = godotenv.Load()
-
-	baseURL := os.Getenv("MRJIRA_BASE_URL")
-	token := os.Getenv("MRJIRA_TOKEN")
-
-	if baseURL == "" || token == "" {
-		fmt.Fprintln(os.Stderr, "Set MRJIRA_BASE_URL and MRJIRA_TOKEN in .env")
+	var cfg config.Config
+	if err := config.Load(&cfg); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	// Default to UCP project key, or pass as arg
-	projectKey := "UCP"
+	baseURL := cfg.BaseURL
+	token := cfg.APIToken
+
+	// Use first board key from config, or pass as arg
+	projectKey := ""
 	if len(os.Args) > 1 {
 		projectKey = os.Args[1]
+	} else if len(cfg.Filters.Boards) > 0 {
+		projectKey = cfg.Filters.Boards[0].Key
+	} else {
+		fmt.Fprintln(os.Stderr, "No boards configured and no project key argument provided")
+		os.Exit(1)
 	}
 
 	jql := fmt.Sprintf("assignee=currentUser() AND project=%s AND sprint in openSprints() ORDER BY priority DESC", projectKey)

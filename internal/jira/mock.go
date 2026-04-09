@@ -12,7 +12,7 @@ var mockSprint = "com.atlassian.greenhopper.service.sprint.Sprint@abc[name=Sprin
 
 var MockIssues = []Issue{
 	{
-		Key: "UCP-1042",
+		Key: "PROJ-1042",
 		Fields: IssueFields{
 			Summary:     "Fix session timeout on idle users",
 			Description: "Users are being logged out after 5 minutes of inactivity. The session TTL should be 30 minutes per the auth spec.",
@@ -33,7 +33,7 @@ var MockIssues = []Issue{
 		},
 	},
 	{
-		Key: "UCP-1038",
+		Key: "PROJ-1038",
 		Fields: IssueFields{
 			Summary:     "Add pagination to dashboard list endpoint",
 			Description: "The /api/v2/dashboards endpoint returns all results. Add cursor-based pagination with a default page size of 25.",
@@ -53,7 +53,7 @@ var MockIssues = []Issue{
 		},
 	},
 	{
-		Key: "UCP-1035",
+		Key: "PROJ-1035",
 		Fields: IssueFields{
 			Summary:     "Migrate user preferences to new schema",
 			Description: "Move user preferences from the legacy key-value table to the new typed preferences schema. Must be backward compatible.",
@@ -73,7 +73,7 @@ var MockIssues = []Issue{
 		},
 	},
 	{
-		Key: "UCP-1029",
+		Key: "PROJ-1029",
 		Fields: IssueFields{
 			Summary:     "Investigate memory spike on report generation",
 			Description: "Heap usage jumps to 4GB when generating the monthly activity report. Profile and identify the allocation hotspot.",
@@ -92,7 +92,7 @@ var MockIssues = []Issue{
 		},
 	},
 	{
-		Key: "UCP-1021",
+		Key: "PROJ-1021",
 		Fields: IssueFields{
 			Summary:     "Update API docs for v2.3 endpoints",
 			Description: "Document the new endpoints added in v2.3: batch operations, webhook management, and audit log queries.",

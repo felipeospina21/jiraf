@@ -5,7 +5,7 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/felipeospina21/mrjira/export"
+	"github.com/felipeospina21/jiraf/export"
 )
 
 func main() {

@@ -1,13 +1,11 @@
-// Package config handles loading the mrjira TOML configuration file.
+// Package config handles loading the jiraf TOML configuration file.
 package config
 
 import (
 	"errors"
 	"flag"
 	"fmt"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -33,14 +31,12 @@ type Config struct {
 
 var (
 	GlobalConfig Config
-	cmdName      = "mrjira"
+	cmdName      = "jiraf"
 )
 
 // Load reads the config file and environment variables.
 func Load(config *Config) error {
 	config.DevMode = isDevMode()
-	_ = godotenv.Load()                                          // cwd
-	_ = godotenv.Load(os.ExpandEnv("$HOME/.config/mrjira/.env")) // config dir
 
 	viper.SetConfigName(cmdName)
 	viper.SetConfigType("toml")
@@ -83,7 +79,7 @@ func loadEnvVars(config *Config) error {
 
 	if !config.DevMode {
 		if token == "" {
-			return errors.New("MRJIRA_TOKEN not set")
+			return errors.New("JIRAF_TOKEN not set")
 		}
 	}
 
@@ -91,24 +87,17 @@ func loadEnvVars(config *Config) error {
 	return nil
 }
 
+var devFlag = flag.Bool("dev", false, "use mocked data instead of calling Jira API")
+
 func isDevMode() bool {
-	// Check env var first (for hub/embedded usage), then flag
-	if os.Getenv("MRJIRA_DEV") == "1" || os.Getenv("MRJIRA_DEV") == "true" {
-		return true
-	}
-	f := flag.Lookup("dev")
-	if f != nil {
-		return f.Value.String() == "true"
-	}
-	dev := flag.Bool("dev", false, "use mocked data instead of calling Jira API")
 	if !flag.Parsed() {
 		flag.Parse()
 	}
-	return *dev
+	return *devFlag
 }
 
 var mockBoards = []Board{
-	{Name: "UCP Board", ID: "9159", Key: "UCP"},
+	{Name: "Project Board", ID: "1", Key: "PROJ"},
 	{Name: "Platform Sprint", ID: "42", Key: "PLAT"},
 	{Name: "Infrastructure", ID: "15", Key: "INFRA"},
 }

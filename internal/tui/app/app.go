@@ -6,11 +6,11 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/felipeospina21/mrjira/internal/config"
-	"github.com/felipeospina21/mrjira/internal/jira"
-	"github.com/felipeospina21/mrjira/internal/tui/boards"
-	"github.com/felipeospina21/mrjira/internal/tui/icon"
-	"github.com/felipeospina21/mrjira/internal/tui/issues"
+	"github.com/felipeospina21/jiraf/internal/config"
+	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui/boards"
+	"github.com/felipeospina21/jiraf/internal/tui/icon"
+	"github.com/felipeospina21/jiraf/internal/tui/issues"
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/shell"
 	"github.com/felipeospina21/tuishell/style"
@@ -26,7 +26,7 @@ var leftPanelStyle = lipgloss.NewStyle().
 	BorderForeground(theme.Border).
 	Width(30)
 
-// Model wraps shell.Model with mrjira-specific domain logic.
+// Model wraps shell.Model with jiraf-specific domain logic.
 type Model struct {
 	Shell  shell.Model
 	client *jira.Client

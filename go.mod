@@ -1,4 +1,4 @@
-module github.com/felipeospina21/mrjira
+module github.com/felipeospina21/jiraf
 
 go 1.26.1
 
@@ -7,7 +7,6 @@ require (
 	charm.land/bubbletea/v2 v2.0.2
 	charm.land/lipgloss/v2 v2.0.2
 	github.com/felipeospina21/tuishell v0.0.0-00010101000000-000000000000
-	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.21.0
 )
 

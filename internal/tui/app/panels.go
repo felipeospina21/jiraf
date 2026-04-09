@@ -2,7 +2,7 @@ package app
 
 import (
 	tea "charm.land/bubbletea/v2"
-	"github.com/felipeospina21/mrjira/internal/tui/boards"
+	"github.com/felipeospina21/jiraf/internal/tui/boards"
 )
 
 // BoardsPanel wraps boards.Model to implement tea.Model and SelectionProvider.

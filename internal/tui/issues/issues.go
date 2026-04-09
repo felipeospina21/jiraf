@@ -8,8 +8,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/felipeospina21/mrjira/internal/jira"
-	"github.com/felipeospina21/mrjira/internal/tui/icon"
+	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/style"
 	"github.com/felipeospina21/tuishell/table"

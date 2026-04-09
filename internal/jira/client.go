@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/felipeospina21/mrjira/internal/config"
+	"github.com/felipeospina21/jiraf/internal/config"
 )
 
 type Client struct {

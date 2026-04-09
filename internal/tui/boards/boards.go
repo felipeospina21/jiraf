@@ -3,7 +3,7 @@ package boards
 import (
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
-	"github.com/felipeospina21/mrjira/internal/config"
+	"github.com/felipeospina21/jiraf/internal/config"
 )
 
 // SelectBoardMsg is sent when the user picks a board.
