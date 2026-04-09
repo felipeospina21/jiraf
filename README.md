@@ -1,6 +1,8 @@
 # 🦒 jiraf
 
-![screenshot](docs/assets/jiraf_logo.png)
+# Jiraf
+
+![screenshot](docs/assets/new_jiraf_logo.png)
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/felipeospina21/jiraf)](https://github.com/felipeospina21/jiraf)
 [![License](https://img.shields.io/github/license/felipeospina21/jiraf)](https://github.com/felipeospina21/jiraf/blob/main/LICENSE)
