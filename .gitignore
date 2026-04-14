@@ -2,3 +2,5 @@
 .log
 debug.log
 jiraf
+go.work
+go.work.sum

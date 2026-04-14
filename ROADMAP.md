@@ -51,3 +51,7 @@ func() tea.Msg { return tuishell.FinishTaskMsg{Keybinds: tuishell.GlobalKeys(fal
 Only calls `m.List.SetHeight(msg.Height)` — never sets width. The `bubbles/list` component needs both dimensions to render correctly. If the shell sends a different width (e.g. after a window resize), the list won't adapt.
 
 **Fix:** Call `m.List.SetWidth(msg.Width)` alongside `SetHeight`.
+
+## 2. New Features — `low`
+
+- [ ] Implement Jira ticket detailed view (right panel showing full ticket info: summary, description, status, assignee, comments, etc.) ([#1](https://github.com/felipeospina21/jiraf/issues/1))

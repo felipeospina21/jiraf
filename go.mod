@@ -6,7 +6,7 @@ require (
 	charm.land/bubbles/v2 v2.1.0
 	charm.land/bubbletea/v2 v2.0.2
 	charm.land/lipgloss/v2 v2.0.2
-	github.com/felipeospina21/tuishell v0.0.0-00010101000000-000000000000
+	github.com/felipeospina21/tuishell v0.0.1
 	github.com/spf13/viper v1.21.0
 )
 
@@ -41,4 +41,3 @@ require (
 	golang.org/x/text v0.28.0 // indirect
 )
 
-replace github.com/felipeospina21/tuishell => ../tuishell
