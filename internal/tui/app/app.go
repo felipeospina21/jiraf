@@ -9,6 +9,7 @@ import (
 	"github.com/felipeospina21/jiraf/internal/config"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui/boards"
+	"github.com/felipeospina21/jiraf/internal/tui/details"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/jiraf/internal/tui/issues"
 	"github.com/felipeospina21/tuishell"
@@ -26,10 +27,15 @@ var leftPanelStyle = lipgloss.NewStyle().
 	BorderForeground(theme.Border).
 	Width(30)
 
+var rightPanelStyle = lipgloss.NewStyle().
+	Border(lipgloss.NormalBorder(), true, false, true, true).
+	BorderForeground(theme.Border)
+
 // Model wraps shell.Model with jiraf-specific domain logic.
 type Model struct {
-	Shell  shell.Model
-	client *jira.Client
+	Shell   shell.Model
+	Details *details.Model
+	client  *jira.Client
 }
 
 func NewApp() tea.Model {
@@ -43,19 +49,22 @@ func NewApp() tea.Model {
 	b := boards.New(cfg.Filters.Boards)
 	left := BoardsPanel{Model: &b}
 	main := issues.New()
+	det := details.New()
 
 	s := shell.New(shell.Config{
-		Theme:          theme,
-		LeftPanel:      left,
-		MainPanel:      main,
-		AppIcon:        icon.Jira,
-		Keybinds:       tuishell.GlobalKeys(cfg.DevMode),
-		DevMode:        cfg.DevMode,
-		LeftPanelWidth: 30,
-		LeftPanelStyle: leftPanelStyle,
+		Theme:           theme,
+		LeftPanel:       left,
+		MainPanel:       main,
+		RightPanel:      DetailsPanel{Model: &det},
+		AppIcon:         icon.Jira,
+		Keybinds:        tuishell.GlobalKeys(cfg.DevMode),
+		DevMode:         cfg.DevMode,
+		LeftPanelWidth:  30,
+		LeftPanelStyle:  leftPanelStyle,
+		RightPanelStyle: rightPanelStyle,
 	})
 
-	return Model{Shell: s, client: client}
+	return Model{Shell: s, Details: &det, client: client}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -77,6 +86,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			func() tea.Msg { return tuishell.StartTaskMsg{Cmd: m.fetchIssues(msg.Key)} },
 		)
 
+	case issues.ViewDetailsMsg:
+		m.Details.SetContent(msg.Issue)
+		var cmds []tea.Cmd
+		if !m.Shell.IsRightOpen() {
+			cmds = append(cmds, func() tea.Msg { return tuishell.OpenRightPanelMsg{} })
+		}
+		return m, tea.Batch(cmds...)
+
+	case details.ClosePanelMsg:
+		return m, func() tea.Msg { return tuishell.CloseRightPanelMsg{} }
+
 	case tuishell.FinishTaskMsg:
 		if main, ok := m.Shell.Main.(issues.Model); ok {
 			main.Loading = false
@@ -86,6 +106,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.Shell, cmd = m.Shell.Update(msg)
+	m.syncKeybinds()
+
+	// Sync panel pointer after shell update
+	if d, ok := m.Shell.Right.(DetailsPanel); ok {
+		m.Details = d.Model
+	}
 
 	// Update spinner view on issues panel when loading
 	if main, ok := m.Shell.Main.(issues.Model); ok && main.Loading {
@@ -98,6 +124,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() tea.View {
 	return m.Shell.RenderView()
+}
+
+func (m *Model) syncKeybinds() {
+	switch m.Shell.Ctx.FocusedPanel {
+	case tuishell.LeftPanel:
+		m.Shell.Statusline.Keybinds = boards.Keybinds
+	default:
+		m.Shell.Statusline.Keybinds = tuishell.GlobalKeys(m.Shell.Ctx.DevMode)
+	}
 }
 
 func (m Model) fetchIssues(projectKey string) tea.Cmd {

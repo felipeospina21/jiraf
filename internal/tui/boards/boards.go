@@ -4,6 +4,7 @@ import (
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 	"github.com/felipeospina21/jiraf/internal/config"
+	"github.com/felipeospina21/tuishell"
 )
 
 // SelectBoardMsg is sent when the user picks a board.
@@ -31,6 +32,7 @@ func New(boards []config.Board) Model {
 		items[i] = item{board: b}
 	}
 	l := list.New(items, list.NewDefaultDelegate(), 30, 10)
+	tuishell.ConfigureList(&l)
 	l.Title = "Boards"
 	l.SetShowHelp(false)
 	return Model{List: l}
