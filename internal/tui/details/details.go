@@ -1,1 +1,179 @@
+// Package details implements the Jira issue details side panel.
 package details
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/tuishell/style"
+)
+
+var theme = style.DefaultTheme()
+
+// ClosePanelMsg is sent when the user wants to close the details panel.
+type ClosePanelMsg struct{}
+
+// Model holds the state for the details side panel.
+type Model struct {
+	Viewport viewport.Model
+	Ready    bool
+	width    int
+	height   int
+}
+
+// New creates a new details panel model.
+func New() Model {
+	return Model{
+		Viewport: viewport.New(viewport.WithWidth(10), viewport.WithHeight(10)),
+	}
+}
+
+func (m Model) Init() tea.Cmd { return nil }
+
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		headerH := lipgloss.Height(m.headerView())
+		footerH := lipgloss.Height(m.footerView())
+		vpH := msg.Height - headerH - footerH
+		if vpH < 1 {
+			vpH = 1
+		}
+		if !m.Ready {
+			m.Viewport = viewport.New(viewport.WithWidth(msg.Width), viewport.WithHeight(vpH))
+			m.Ready = true
+		} else {
+			m.Viewport.SetWidth(msg.Width)
+			m.Viewport.SetHeight(vpH)
+		}
+		return m, nil
+
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "q", "esc":
+			return m, func() tea.Msg { return ClosePanelMsg{} }
+		}
+	}
+
+	var cmd tea.Cmd
+	m.Viewport, cmd = m.Viewport.Update(msg)
+	return m, cmd
+}
+
+func (m Model) View() tea.View {
+	return tea.NewView(fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.Viewport.View(), m.footerView()))
+}
+
+func (m Model) headerView() string {
+	title := titleStyle.Render(" Issue Details ")
+	line := strings.Repeat("─", max(0, m.Viewport.Width()-lipgloss.Width(title)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, title, line)
+}
+
+func (m Model) footerView() string {
+	info := infoStyle.Render(fmt.Sprintf(" %3.f%% ", m.Viewport.ScrollPercent()*100))
+	line := strings.Repeat("─", max(0, m.Viewport.Width()-lipgloss.Width(info)))
+	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
+}
+
+// SetContent formats the issue and sets it as the viewport content.
+func (m *Model) SetContent(issue jira.Issue) {
+	f := issue.Fields
+	var b strings.Builder
+
+	// Key + Summary
+	b.WriteString(keyStyle.Render(issue.Key))
+	b.WriteString("\n")
+	b.WriteString(summaryStyle.Render(f.Summary))
+	b.WriteString("\n\n")
+
+	// Status / Priority / Type
+	writeField(&b, "Status", f.Status.Name)
+	writeField(&b, "Priority", f.Priority.Name)
+	writeField(&b, "Type", f.IssueType.Name)
+	b.WriteString("\n")
+
+	// People
+	if f.Assignee != nil {
+		writeField(&b, "Assignee", f.Assignee.DisplayName)
+	}
+	if f.Reporter != nil {
+		writeField(&b, "Reporter", f.Reporter.DisplayName)
+	}
+	b.WriteString("\n")
+
+	// Sprint
+	if s := f.ActiveSprint(); s != nil {
+		writeField(&b, "Sprint", s.Name)
+	}
+
+	// Story Points
+	if f.StoryPoints != nil {
+		writeField(&b, "Story Points", strconv.Itoa(int(*f.StoryPoints)))
+	}
+
+	// Labels
+	if len(f.Labels) > 0 {
+		writeField(&b, "Labels", strings.Join(f.Labels, ", "))
+	}
+
+	// Components
+	if len(f.Components) > 0 {
+		names := make([]string, len(f.Components))
+		for i, c := range f.Components {
+			names[i] = c.Name
+		}
+		writeField(&b, "Components", strings.Join(names, ", "))
+	}
+
+	// Comments
+	writeField(&b, "Comments", strconv.Itoa(f.Comment.Total))
+
+	// Dates
+	writeField(&b, "Created", f.Created.Time.Format("2006-01-02 15:04"))
+	writeField(&b, "Updated", f.Updated.Time.Format("2006-01-02 15:04"))
+
+	// Description
+	if f.Description != "" {
+		b.WriteString("\n")
+		b.WriteString(sectionStyle.Render("Description"))
+		b.WriteString("\n")
+		b.WriteString(descStyle.Render(f.Description))
+		b.WriteString("\n")
+	}
+
+	m.Viewport.SetContent(b.String())
+}
+
+func writeField(b *strings.Builder, label, value string) {
+	b.WriteString(labelStyle.Render(label+":") + " " + valueStyle.Render(value) + "\n")
+}
+
+// Styles
+var (
+	titleStyle = func() lipgloss.Style {
+		b := lipgloss.RoundedBorder()
+		b.Right = "├"
+		return lipgloss.NewStyle().BorderStyle(b).Padding(0)
+	}()
+
+	infoStyle = func() lipgloss.Style {
+		b := lipgloss.RoundedBorder()
+		b.Left = "┤"
+		return lipgloss.NewStyle().BorderStyle(b).Padding(0)
+	}()
+
+	keyStyle     = lipgloss.NewStyle().Foreground(theme.Primary).Bold(true).MarginLeft(1)
+	summaryStyle = lipgloss.NewStyle().Foreground(theme.Text).Bold(true).MarginLeft(1)
+	labelStyle   = lipgloss.NewStyle().Foreground(theme.TextDimmed).MarginLeft(1).Width(14)
+	valueStyle   = lipgloss.NewStyle().Foreground(theme.Text)
+	sectionStyle = lipgloss.NewStyle().Foreground(theme.Primary).Bold(true).MarginLeft(1)
+	descStyle    = lipgloss.NewStyle().Foreground(theme.Text).MarginLeft(2)
+)

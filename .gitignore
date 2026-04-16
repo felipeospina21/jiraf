@@ -4,3 +4,5 @@ debug.log
 jiraf
 go.work
 go.work.sum
+c.out
+dist/

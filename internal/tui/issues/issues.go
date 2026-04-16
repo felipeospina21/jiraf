@@ -35,6 +35,11 @@ type FetchedMsg struct {
 	Err    error
 }
 
+// ViewDetailsMsg is sent when the user wants to view issue details.
+type ViewDetailsMsg struct {
+	Issue jira.Issue
+}
+
 var cols = []table.Column{
 	{Name: "created", Title: icon.Clock, Width: 3},
 	{Name: "priority", Title: "Priority", Width: 4, Centered: true},
@@ -59,6 +64,7 @@ var cols = []table.Column{
 // Model is the main-panel issues table.
 type Model struct {
 	Table         table.Model
+	Issues        []jira.Issue
 	SelectedBoard string
 	Loading       bool
 	SpinnerView   string
@@ -100,6 +106,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return tuishell.FinishTaskMsg{Err: msg.Err}
 			}
 		}
+		m.Issues = msg.Issues
 		rows := make([]table.Row, len(msg.Issues))
 		for i, issue := range msg.Issues {
 			rows[i] = issueToRow(issue)
@@ -124,6 +131,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "enter", "l":
+			idx := m.Table.Cursor()
+			if idx >= 0 && idx < len(m.Issues) {
+				issue := m.Issues[idx]
+				return m, func() tea.Msg { return ViewDetailsMsg{Issue: issue} }
+			}
+		}
 		var cmd tea.Cmd
 		m.Table, cmd = m.Table.Update(msg)
 		return m, cmd
