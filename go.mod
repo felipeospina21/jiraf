@@ -2,13 +2,11 @@ module github.com/felipeospina21/jiraf
 
 go 1.26.1
 
-replace github.com/felipeospina21/tuishell => ../tuishell
-
 require (
 	charm.land/bubbles/v2 v2.1.0
 	charm.land/bubbletea/v2 v2.0.2
 	charm.land/lipgloss/v2 v2.0.2
-	github.com/felipeospina21/tuishell v0.0.1
+	github.com/felipeospina21/tuishell v0.2.0
 	github.com/spf13/viper v1.21.0
 )
 
