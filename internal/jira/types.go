@@ -34,8 +34,13 @@ func (jt *JiraTime) UnmarshalJSON(b []byte) error {
 
 // Issue represents a Jira issue from the search API.
 type Issue struct {
-	Key    string      `json:"key"`
-	Fields IssueFields `json:"fields"`
+	Key            string         `json:"key"`
+	Fields         IssueFields    `json:"fields"`
+	RenderedFields RenderedFields `json:"renderedFields"`
+}
+
+type RenderedFields struct {
+	Description string `json:"description"`
 }
 
 type IssueFields struct {

@@ -16,7 +16,7 @@ func (c *Client) GetMyIssues(projectKey string) ([]Issue, error) {
 	}
 
 	jql := fmt.Sprintf("assignee=currentUser() AND project=%s AND status NOT IN (Done, Withdrawn) ORDER BY priority DESC, updated DESC", projectKey)
-	path := fmt.Sprintf("/rest/api/2/search?jql=%s&fields=%s&maxResults=50", url.QueryEscape(jql), issueFields)
+	path := fmt.Sprintf("/rest/api/2/search?jql=%s&fields=%s&expand=renderedFields&maxResults=50", url.QueryEscape(jql), issueFields)
 
 	var resp SearchResponse
 	if err := c.get(path, &resp); err != nil {

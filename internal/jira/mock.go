@@ -15,7 +15,7 @@ var MockIssues = []Issue{
 		Key: "PROJ-1042",
 		Fields: IssueFields{
 			Summary:     "Fix session timeout on idle users",
-			Description: "Users are being logged out after 5 minutes of inactivity. The session TTL should be 30 minutes per the auth spec.",
+			Description: "h3. Problem\nUsers are being logged out after 5 minutes of inactivity.\n\nh3. Acceptance Criteria\n# Session TTL should be 30 minutes per the auth spec\n## Verify with integration tests\n# Idle detection must use server-side timestamps",
 			Status:      NameField{Name: "In Progress"},
 			Priority:    NameField{Name: "High"},
 			IssueType:   NameField{Name: "Bug"},
@@ -30,6 +30,9 @@ var MockIssues = []Issue{
 			Comment:     CommentField{Total: 4},
 			StoryPoints: sp(5),
 			SprintRaw:   []string{mockSprint},
+		},
+		RenderedFields: RenderedFields{
+			Description: "<h3>Problem</h3><p>Users are being logged out after 5 minutes of inactivity.</p><h3>Acceptance Criteria</h3><ol><li>Session TTL should be 30 minutes per the auth spec<ol><li>Verify with integration tests</li></ol></li><li>Idle detection must use server-side timestamps</li></ol>",
 		},
 	},
 	{
@@ -51,6 +54,9 @@ var MockIssues = []Issue{
 			StoryPoints: sp(3),
 			SprintRaw:   []string{mockSprint},
 		},
+		RenderedFields: RenderedFields{
+			Description: "<p>The /api/v2/dashboards endpoint returns all results. Add cursor-based pagination with a default page size of 25.</p>",
+		},
 	},
 	{
 		Key: "PROJ-1035",
@@ -71,6 +77,9 @@ var MockIssues = []Issue{
 			StoryPoints: sp(8),
 			SprintRaw:   []string{mockSprint},
 		},
+		RenderedFields: RenderedFields{
+			Description: "<p>Move user preferences from the legacy key-value table to the new typed preferences schema. Must be backward compatible.</p>",
+		},
 	},
 	{
 		Key: "PROJ-1029",
@@ -90,6 +99,9 @@ var MockIssues = []Issue{
 			StoryPoints: sp(2),
 			SprintRaw:   []string{mockSprint},
 		},
+		RenderedFields: RenderedFields{
+			Description: "<p>Heap usage jumps to 4GB when generating the monthly activity report. Profile and identify the allocation hotspot.</p>",
+		},
 	},
 	{
 		Key: "PROJ-1021",
@@ -106,6 +118,9 @@ var MockIssues = []Issue{
 			Labels:      []string{"docs"},
 			FixVersions: []NameField{{Name: "v2.3"}},
 			Comment:     CommentField{Total: 0},
+		},
+		RenderedFields: RenderedFields{
+			Description: "<p>Document the new endpoints added in v2.3: batch operations, webhook management, and audit log queries.</p>",
 		},
 	},
 }

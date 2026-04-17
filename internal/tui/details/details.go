@@ -8,6 +8,7 @@ import (
 
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/glamour/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/tuishell/style"
@@ -15,13 +16,11 @@ import (
 
 var theme = style.DefaultTheme()
 
-// ClosePanelMsg is sent when the user wants to close the details panel.
-type ClosePanelMsg struct{}
-
 // Model holds the state for the details side panel.
 type Model struct {
 	Viewport viewport.Model
 	Ready    bool
+	issue    *jira.Issue
 	width    int
 	height   int
 }
@@ -53,13 +52,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.Viewport.SetWidth(msg.Width)
 			m.Viewport.SetHeight(vpH)
 		}
-		return m, nil
-
-	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "q", "esc":
-			return m, func() tea.Msg { return ClosePanelMsg{} }
+		if m.issue != nil {
+			m.renderContent()
 		}
+		return m, nil
 	}
 
 	var cmd tea.Cmd
@@ -85,11 +81,16 @@ func (m Model) footerView() string {
 
 // SetContent formats the issue and sets it as the viewport content.
 func (m *Model) SetContent(issue jira.Issue) {
-	f := issue.Fields
+	m.issue = &issue
+	m.renderContent()
+}
+
+func (m *Model) renderContent() {
+	f := m.issue.Fields
 	var b strings.Builder
 
 	// Key + Summary
-	b.WriteString(keyStyle.Render(issue.Key))
+	b.WriteString(keyStyle.Render(m.issue.Key))
 	b.WriteString("\n")
 	b.WriteString(summaryStyle.Render(f.Summary))
 	b.WriteString("\n\n")
@@ -141,11 +142,16 @@ func (m *Model) SetContent(issue jira.Issue) {
 	writeField(&b, "Updated", f.Updated.Time.Format("2006-01-02 15:04"))
 
 	// Description
-	if f.Description != "" {
+	if f.Description != "" || m.issue.RenderedFields.Description != "" {
 		b.WriteString("\n")
 		b.WriteString(sectionStyle.Render("Description"))
 		b.WriteString("\n")
-		b.WriteString(descStyle.Render(f.Description))
+		desc := m.issue.RenderedFields.Description
+		if desc == "" {
+			desc = f.Description
+		}
+		md := jira.HTMLToMarkdown(desc)
+		b.WriteString(renderMarkdown(md, m.width))
 		b.WriteString("\n")
 	}
 
@@ -154,6 +160,21 @@ func (m *Model) SetContent(issue jira.Issue) {
 
 func writeField(b *strings.Builder, label, value string) {
 	b.WriteString(labelStyle.Render(label+":") + " " + valueStyle.Render(value) + "\n")
+}
+
+func renderMarkdown(md string, width int) string {
+	r, err := glamour.NewTermRenderer(
+		glamour.WithStandardStyle("dark"),
+		glamour.WithWordWrap(width),
+	)
+	if err != nil {
+		return md
+	}
+	out, err := r.Render(md)
+	if err != nil {
+		return md
+	}
+	return strings.TrimSpace(out)
 }
 
 // Styles
@@ -175,5 +196,4 @@ var (
 	labelStyle   = lipgloss.NewStyle().Foreground(theme.TextDimmed).MarginLeft(1).Width(14)
 	valueStyle   = lipgloss.NewStyle().Foreground(theme.Text)
 	sectionStyle = lipgloss.NewStyle().Foreground(theme.Primary).Bold(true).MarginLeft(1)
-	descStyle    = lipgloss.NewStyle().Foreground(theme.Text).MarginLeft(2)
 )
