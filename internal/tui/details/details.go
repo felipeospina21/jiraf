@@ -10,7 +10,6 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/glamour/v2"
 	"charm.land/lipgloss/v2"
-	htmltomd "github.com/JohannesKaufmann/html-to-markdown/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/tuishell/style"
 )
@@ -151,10 +150,7 @@ func (m *Model) renderContent() {
 		if desc == "" {
 			desc = f.Description
 		}
-		md, err := htmltomd.ConvertString(desc)
-		if err != nil {
-			md = f.Description
-		}
+		md := jira.HTMLToMarkdown(desc)
 		b.WriteString(renderMarkdown(md, m.width))
 		b.WriteString("\n")
 	}
