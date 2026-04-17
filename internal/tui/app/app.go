@@ -39,9 +39,11 @@ type Model struct {
 	client  *jira.Client
 
 	// Transition state
-	pendingTransition  string // issue key awaiting transition
-	transitionPicker   popover.ListModel
-	transitionIDByName map[string]string
+	pendingTransition      string // issue key awaiting transition
+	pendingTransitionName  string // selected transition name awaiting confirmation
+	confirmPopover         popover.ConfirmModel
+	transitionPicker       popover.ListModel
+	transitionIDByName     map[string]string
 }
 
 func NewApp() tea.Model {
@@ -70,7 +72,13 @@ func NewApp() tea.Model {
 		RightPanelStyle: rightPanelStyle,
 	})
 
-	return Model{Shell: s, Details: &det, client: client, transitionPicker: popover.NewList(theme)}
+	return Model{
+		Shell:            s,
+		Details:          &det,
+		client:           client,
+		confirmPopover:   popover.NewConfirm(theme),
+		transitionPicker: popover.NewList(theme),
+	}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -135,15 +143,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tuishell.SelectListPopoverMsg:
 		if m.pendingTransition != "" {
-			issueKey := m.pendingTransition
-			transitionID := m.transitionIDByName[msg.Value]
-			m.pendingTransition = ""
-			m.transitionIDByName = nil
+			m.pendingTransitionName = msg.Value
 			m.transitionPicker.Close()
-			return m, func() tea.Msg {
-				return tuishell.StartTaskMsg{Cmd: m.doTransition(issueKey, transitionID)}
-			}
+			m.confirmPopover.Open(
+				"Transition Issue",
+				fmt.Sprintf("Transition %s to %s?", m.pendingTransition, msg.Value),
+				"Confirm",
+				"Cancel",
+			)
 		}
+
+	case tuishell.ConfirmPopoverYesMsg:
+		m.confirmPopover.Close()
+		issueKey := m.pendingTransition
+		transitionID := m.transitionIDByName[m.pendingTransitionName]
+		m.pendingTransition = ""
+		m.pendingTransitionName = ""
+		m.transitionIDByName = nil
+		return m, func() tea.Msg {
+			return tuishell.StartTaskMsg{Cmd: m.doTransition(issueKey, transitionID)}
+		}
+
+	case tuishell.ConfirmPopoverNoMsg:
+		m.confirmPopover.Close()
+		m.pendingTransition = ""
+		m.pendingTransitionName = ""
+		m.transitionIDByName = nil
 
 	case tuishell.CloseListPopoverMsg:
 		m.pendingTransition = ""
@@ -180,6 +205,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// Route keys to confirm popover when open
+	if m.confirmPopover.IsOpen() {
+		if _, ok := msg.(tea.KeyPressMsg); ok {
+			var cmd tea.Cmd
+			m.confirmPopover, cmd = m.confirmPopover.Update(msg)
+			return m, cmd
+		}
+	}
+
 	// Route keys to transition picker when open
 	if m.transitionPicker.IsOpen() {
 		if _, ok := msg.(tea.KeyPressMsg); ok {
@@ -209,9 +243,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() tea.View {
 	v := m.Shell.RenderView()
+	w := m.Shell.Ctx.Window.Width
+	h := m.Shell.Ctx.Window.Height
+	if m.confirmPopover.IsOpen() {
+		screen := m.confirmPopover.View(v.Content, w, h)
+		return tea.View{Content: screen, AltScreen: v.AltScreen}
+	}
 	if m.transitionPicker.IsOpen() {
-		w := m.Shell.Ctx.Window.Width
-		h := m.Shell.Ctx.Window.Height
 		screen := m.transitionPicker.View(v.Content, w, h)
 		return tea.View{Content: screen, AltScreen: v.AltScreen}
 	}
