@@ -7,7 +7,7 @@ require (
 	charm.land/bubbletea/v2 v2.0.2
 	charm.land/glamour/v2 v2.0.0
 	charm.land/lipgloss/v2 v2.0.2
-	github.com/felipeospina21/tuishell v0.2.0
+	github.com/felipeospina21/tuishell v0.3.0
 	github.com/spf13/viper v1.21.0
 	golang.org/x/net v0.47.0
 )
