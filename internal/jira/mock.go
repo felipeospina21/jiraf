@@ -10,6 +10,13 @@ func sp(v float64) *float64 { return &v }
 
 var mockSprint = "com.atlassian.greenhopper.service.sprint.Sprint@abc[name=Sprint 42,state=ACTIVE,startDate=2026-04-01T08:00:00.000-05:00,endDate=2026-04-15T08:00:00.000-05:00]"
 
+var MockTransitions = []Transition{
+	{ID: "11", Name: "To Do", To: NameField{Name: "To Do"}},
+	{ID: "21", Name: "In Progress", To: NameField{Name: "In Progress"}},
+	{ID: "31", Name: "In Review", To: NameField{Name: "In Review"}},
+	{ID: "41", Name: "Done", To: NameField{Name: "Done"}},
+}
+
 var MockIssues = []Issue{
 	{
 		Key: "PROJ-1042",
