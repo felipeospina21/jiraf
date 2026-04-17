@@ -30,6 +30,32 @@ func NewClient(cfg *config.Config) *Client {
 	}
 }
 
+func (c *Client) post(path string, body any) error {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", c.baseURL+path, strings.NewReader(string(data)))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		b, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return fmt.Errorf("jira: HTTP %d — %s", resp.StatusCode, b)
+	}
+	return nil
+}
+
 func (c *Client) get(path string, out any) error {
 	req, err := http.NewRequest("GET", c.baseURL+path, nil)
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/jiraf/internal/tui/issues"
 	"github.com/felipeospina21/tuishell"
+	"github.com/felipeospina21/tuishell/popover"
 	"github.com/felipeospina21/tuishell/shell"
 	"github.com/felipeospina21/tuishell/style"
 )
@@ -36,6 +37,11 @@ type Model struct {
 	Shell   shell.Model
 	Details *details.Model
 	client  *jira.Client
+
+	// Transition state
+	pendingTransition  string // issue key awaiting transition
+	transitionPicker   popover.ListModel
+	transitionIDByName map[string]string
 }
 
 func NewApp() tea.Model {
@@ -64,11 +70,22 @@ func NewApp() tea.Model {
 		RightPanelStyle: rightPanelStyle,
 	})
 
-	return Model{Shell: s, Details: &det, client: client}
+	return Model{Shell: s, Details: &det, client: client, transitionPicker: popover.NewList(theme)}
 }
 
 func (m Model) Init() tea.Cmd {
 	return m.Shell.Init()
+}
+
+// TransitionsFetchedMsg carries the result of fetching available transitions.
+type TransitionsFetchedMsg struct {
+	Transitions []jira.Transition
+	Err         error
+}
+
+// TransitionDoneMsg carries the result of executing a transition.
+type TransitionDoneMsg struct {
+	Err error
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -94,10 +111,81 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Batch(cmds...)
 
+	case issues.TransitionMsg:
+		m.pendingTransition = msg.Issue.Key
+		return m, func() tea.Msg {
+			return tuishell.StartTaskMsg{Cmd: m.fetchTransitions(msg.Issue.Key)}
+		}
+
+	case TransitionsFetchedMsg:
+		if msg.Err != nil {
+			m.pendingTransition = ""
+			return m, func() tea.Msg {
+				return tuishell.FinishTaskMsg{Err: msg.Err}
+			}
+		}
+		items := make([]tuishell.ListPopoverItem, len(msg.Transitions))
+		m.transitionIDByName = make(map[string]string, len(msg.Transitions))
+		for i, t := range msg.Transitions {
+			items[i] = tuishell.ListPopoverItem{Label: t.Name, Value: t.Name}
+			m.transitionIDByName[t.Name] = t.ID
+		}
+		m.transitionPicker.Open(fmt.Sprintf("Transition %s", m.pendingTransition), items)
+		return m, func() tea.Msg { return tuishell.FinishTaskMsg{Err: nil} }
+
+	case tuishell.SelectListPopoverMsg:
+		if m.pendingTransition != "" {
+			issueKey := m.pendingTransition
+			transitionID := m.transitionIDByName[msg.Value]
+			m.pendingTransition = ""
+			m.transitionIDByName = nil
+			m.transitionPicker.Close()
+			return m, func() tea.Msg {
+				return tuishell.StartTaskMsg{Cmd: m.doTransition(issueKey, transitionID)}
+			}
+		}
+
+	case tuishell.CloseListPopoverMsg:
+		m.pendingTransition = ""
+		m.transitionIDByName = nil
+		m.transitionPicker.Close()
+
+	case TransitionDoneMsg:
+		if msg.Err != nil {
+			return m, func() tea.Msg {
+				return tuishell.FinishTaskMsg{Err: msg.Err}
+			}
+		}
+		var cmds []tea.Cmd
+		cmds = append(cmds, func() tea.Msg {
+			return tuishell.FinishTaskMsg{Err: nil, Keybinds: issues.Keybinds}
+		})
+		cmds = append(cmds, func() tea.Msg {
+			return tuishell.SetStatusMsg{Content: "✓ Transition complete"}
+		})
+		// Refetch issues if we have a selected board
+		if main, ok := m.Shell.Main.(issues.Model); ok && main.SelectedBoard != "" {
+			main.Loading = true
+			m.Shell.Main = main
+			cmds = append(cmds, func() tea.Msg {
+				return tuishell.StartTaskMsg{Cmd: m.fetchIssues(main.SelectedBoard)}
+			})
+		}
+		return m, tea.Batch(cmds...)
+
 	case tuishell.FinishTaskMsg:
 		if main, ok := m.Shell.Main.(issues.Model); ok {
 			main.Loading = false
 			m.Shell.Main = main
+		}
+	}
+
+	// Route keys to transition picker when open
+	if m.transitionPicker.IsOpen() {
+		if _, ok := msg.(tea.KeyPressMsg); ok {
+			var cmd tea.Cmd
+			m.transitionPicker, cmd = m.transitionPicker.Update(msg)
+			return m, cmd
 		}
 	}
 
@@ -120,13 +208,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() tea.View {
-	return m.Shell.RenderView()
+	v := m.Shell.RenderView()
+	if m.transitionPicker.IsOpen() {
+		w := m.Shell.Ctx.Window.Width
+		h := m.Shell.Ctx.Window.Height
+		screen := m.transitionPicker.View(v.Content, w, h)
+		return tea.View{Content: screen, AltScreen: v.AltScreen}
+	}
+	return v
 }
 
 func (m *Model) syncKeybinds() {
 	switch m.Shell.Ctx.FocusedPanel {
 	case tuishell.LeftPanel:
 		m.Shell.Statusline.Keybinds = boards.Keybinds
+	case tuishell.MainPanel:
+		m.Shell.Statusline.Keybinds = issues.Keybinds
 	default:
 		m.Shell.Statusline.Keybinds = tuishell.GlobalKeys(m.Shell.Ctx.DevMode)
 	}
@@ -136,5 +233,19 @@ func (m Model) fetchIssues(projectKey string) tea.Cmd {
 	return func() tea.Msg {
 		iss, err := m.client.GetMyIssues(projectKey)
 		return issues.FetchedMsg{Issues: iss, Err: err}
+	}
+}
+
+func (m Model) fetchTransitions(issueKey string) tea.Cmd {
+	return func() tea.Msg {
+		t, err := m.client.GetTransitions(issueKey)
+		return TransitionsFetchedMsg{Transitions: t, Err: err}
+	}
+}
+
+func (m Model) doTransition(issueKey, transitionID string) tea.Cmd {
+	return func() tea.Msg {
+		err := m.client.DoTransition(issueKey, transitionID)
+		return TransitionDoneMsg{Err: err}
 	}
 }

@@ -9,6 +9,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/style"
@@ -37,6 +38,11 @@ type FetchedMsg struct {
 
 // ViewDetailsMsg is sent when the user wants to view issue details.
 type ViewDetailsMsg struct {
+	Issue jira.Issue
+}
+
+// TransitionMsg is sent when the user wants to transition an issue's status.
+type TransitionMsg struct {
 	Issue jira.Issue
 }
 
@@ -131,12 +137,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "enter", "l":
+		match := tui.KeyMatcher(msg)
+		switch {
+		case match(Keybinds.Details):
 			idx := m.Table.Cursor()
 			if idx >= 0 && idx < len(m.Issues) {
 				issue := m.Issues[idx]
 				return m, func() tea.Msg { return ViewDetailsMsg{Issue: issue} }
+			}
+		case match(Keybinds.Transition):
+			idx := m.Table.Cursor()
+			if idx >= 0 && idx < len(m.Issues) {
+				issue := m.Issues[idx]
+				return m, func() tea.Msg { return TransitionMsg{Issue: issue} }
 			}
 		}
 		var cmd tea.Cmd
