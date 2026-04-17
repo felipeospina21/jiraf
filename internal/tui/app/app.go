@@ -94,9 +94,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Batch(cmds...)
 
-	case details.ClosePanelMsg:
-		return m, func() tea.Msg { return tuishell.CloseRightPanelMsg{} }
-
 	case tuishell.FinishTaskMsg:
 		if main, ok := m.Shell.Main.(issues.Model); ok {
 			main.Loading = false

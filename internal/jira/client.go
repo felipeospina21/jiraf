@@ -3,7 +3,9 @@ package jira
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/felipeospina21/jiraf/internal/config"
@@ -21,7 +23,10 @@ func NewClient(cfg *config.Config) *Client {
 		baseURL:    cfg.BaseURL,
 		token:      cfg.APIToken,
 		devMode:    cfg.DevMode,
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: &http.Client{
+			Timeout:       10 * time.Second,
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		},
 	}
 }
 
@@ -39,8 +44,15 @@ func (c *Client) get(path string, out any) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		return fmt.Errorf("jira: authentication redirect (HTTP %d) — check your VPN connection and JIRAF_TOKEN", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); !strings.Contains(ct, "application/json") {
+		return fmt.Errorf("jira: unexpected response (HTTP %d, %s) — check VPN connection and JIRAF_TOKEN", resp.StatusCode, ct)
+	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("jira: %s", resp.Status)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return fmt.Errorf("jira: HTTP %d — %s", resp.StatusCode, body)
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
 }
