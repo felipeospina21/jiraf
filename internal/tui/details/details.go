@@ -11,6 +11,8 @@ import (
 	"charm.land/glamour/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui"
+	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/style"
 )
 
@@ -36,6 +38,12 @@ func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		match := tui.KeyMatcher(msg)
+		switch {
+		case match(Keybinds.Fullscreen):
+			return m, func() tea.Msg { return tuishell.ToggleFullscreenMsg{} }
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
