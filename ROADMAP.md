@@ -8,8 +8,6 @@ _(none)_
 
 ### Critical
 
-- [ ] Transition issue status (To Do → In Progress → Done) ([#8](https://github.com/felipeospina21/jiraf/issues/8))
-- [ ] Open issue in browser ([#7](https://github.com/felipeospina21/jiraf/issues/7))
 - [ ] Assign/unassign issue ([#6](https://github.com/felipeospina21/jiraf/issues/6))
 - [ ] Add comment ([#5](https://github.com/felipeospina21/jiraf/issues/5))
 
@@ -23,7 +21,6 @@ _(none)_
 - [ ] Pagination / load more ([#15](https://github.com/felipeospina21/jiraf/issues/15))
 - [ ] Sprint board view (kanban columns) ([#17](https://github.com/felipeospina21/jiraf/issues/17))
 - [ ] Create issue ([#14](https://github.com/felipeospina21/jiraf/issues/14))
-- [ ] Refetch issues ([#16](https://github.com/felipeospina21/jiraf/issues/16))
 
 ### Medium
 
