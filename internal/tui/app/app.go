@@ -260,10 +260,10 @@ func (m *Model) syncKeybinds() {
 	switch m.Shell.Ctx.FocusedPanel {
 	case tuishell.LeftPanel:
 		m.Shell.Statusline.Keybinds = boards.Keybinds
+	case tuishell.RightPanel:
+		m.Shell.Statusline.Keybinds = details.Keybinds
 	case tuishell.MainPanel:
 		m.Shell.Statusline.Keybinds = issues.Keybinds
-	default:
-		m.Shell.Statusline.Keybinds = tuishell.GlobalKeys(m.Shell.Ctx.DevMode)
 	}
 }
 
