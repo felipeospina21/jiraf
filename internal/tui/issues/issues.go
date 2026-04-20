@@ -46,6 +46,14 @@ type TransitionMsg struct {
 	Issue jira.Issue
 }
 
+// OpenInBrowserMsg is sent when the user wants to open the issue in the browser.
+type OpenInBrowserMsg struct {
+	IssueKey string
+}
+
+// RefetchMsg is sent when the user wants to refetch the issues list.
+type RefetchMsg struct{}
+
 var cols = []table.Column{
 	{Name: "created", Title: icon.Clock, Width: 3},
 	{Name: "priority", Title: "Priority", Width: 4, Centered: true},
@@ -151,6 +159,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				issue := m.Issues[idx]
 				return m, func() tea.Msg { return TransitionMsg{Issue: issue} }
 			}
+		case match(Keybinds.OpenInBrowser):
+			idx := m.Table.Cursor()
+			if idx >= 0 && idx < len(m.Issues) {
+				issueKey := m.Issues[idx].Key
+				return m, func() tea.Msg { return OpenInBrowserMsg{IssueKey: issueKey} }
+			}
+		case match(Keybinds.Refetch):
+			return m, func() tea.Msg { return RefetchMsg{} }
 		}
 		var cmd tea.Cmd
 		m.Table, cmd = m.Table.Update(msg)

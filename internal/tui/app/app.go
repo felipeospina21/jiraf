@@ -7,6 +7,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/config"
+	jirafExec "github.com/felipeospina21/jiraf/internal/exec"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui/boards"
 	"github.com/felipeospina21/jiraf/internal/tui/details"
@@ -118,6 +119,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, func() tea.Msg { return tuishell.OpenRightPanelMsg{} })
 		}
 		return m, tea.Batch(cmds...)
+
+	case issues.OpenInBrowserMsg:
+		url := config.GlobalConfig.BaseURL + "/browse/" + msg.IssueKey
+		jirafExec.OpenBrowser(url)
+		return m, nil
+
+	case issues.RefetchMsg:
+		if main, ok := m.Shell.Main.(issues.Model); ok && main.SelectedBoard != "" {
+			main.Loading = true
+			main.SpinnerView = m.Shell.Spinner.View()
+			m.Shell.Main = main
+			return m, func() tea.Msg {
+				return tuishell.StartTaskMsg{Cmd: m.fetchIssues(main.SelectedBoard)}
+			}
+		}
 
 	case issues.TransitionMsg:
 		m.pendingTransition = msg.Issue.Key
