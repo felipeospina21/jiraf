@@ -117,9 +117,15 @@ You can customize the color theme by adding a `[theme]` section to your config f
 
 **Presets:** Use a preconfigured palette by name. Individual overrides can be combined with a preset.
 
-| Preset             | Description                  |
-| ------------------ | ---------------------------- |
-| `catppuccin-mocha` | Catppuccin Mocha (dark)      |
+| Preset                 | Description                  |
+| ---------------------- | ---------------------------- |
+| `catppuccin-mocha`     | Catppuccin Mocha (dark)      |
+| `catppuccin-macchiato` | Catppuccin Macchiato         |
+| `catppuccin-frappe`    | Catppuccin Frappé            |
+| `catppuccin-latte`     | Catppuccin Latte (light)     |
+| `rose-pine`            | Rosé Pine                    |
+| `tokyo-night`          | Tokyo Night                  |
+| `dracula`              | Dracula                      |
 
 ```toml
 [theme]
