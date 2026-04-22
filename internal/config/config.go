@@ -24,6 +24,7 @@ type Filter struct {
 // ThemeOverrides holds optional color overrides for the theme.
 // Each field is a hex color string (e.g. "#FF5733"). Nil means use default.
 type ThemeOverrides struct {
+	Preset          *string `mapstructure:"preset"`
 	Primary         *string `mapstructure:"primary"`
 	PrimaryBright   *string `mapstructure:"primary_bright"`
 	PrimaryFg       *string `mapstructure:"primary_fg"`

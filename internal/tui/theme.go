@@ -17,6 +17,11 @@ func applyOverride(target *color.Color, val *string) {
 // BuildTheme returns DefaultTheme with any non-nil overrides applied.
 func BuildTheme(overrides config.ThemeOverrides) style.Theme {
 	t := DefaultTheme()
+	if overrides.Preset != nil {
+		if preset, ok := presets[*overrides.Preset]; ok {
+			t = preset
+		}
+	}
 	applyOverride(&t.Primary, overrides.Primary)
 	applyOverride(&t.PrimaryBright, overrides.PrimaryBright)
 	applyOverride(&t.PrimaryFg, overrides.PrimaryFg)

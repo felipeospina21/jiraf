@@ -113,7 +113,20 @@ Each board in `filters.boards` has the following fields:
 
 ### Theme
 
-You can customize the color theme by adding a `[theme]` section to your config file. Each property accepts a hex color string. Only the tokens you specify are overridden — everything else falls back to the default Jira blue palette.
+You can customize the color theme by adding a `[theme]` section to your config file.
+
+**Presets:** Use a preconfigured palette by name. Individual overrides can be combined with a preset.
+
+| Preset             | Description                  |
+| ------------------ | ---------------------------- |
+| `catppuccin-mocha` | Catppuccin Mocha (dark)      |
+
+```toml
+[theme]
+preset = "catppuccin-mocha"
+```
+
+**Individual overrides:** Each property accepts a hex color string. Only the tokens you specify are overridden — everything else falls back to the preset (or the default Jira blue palette if no preset is set).
 
 | Token             | Description                        | Default   |
 | ----------------- | ---------------------------------- | --------- |
@@ -158,11 +171,14 @@ boards = [
     { name = "Platform Sprint", id = "42", key = "PLAT" },
 ]
 
-# Optional: override specific theme colors
+# Optional: use a preset theme
 [theme]
-primary = "#0052CC"
-success = "#22C55E"
-danger = "#EF4444"
+preset = "catppuccin-mocha"
+
+# Or override specific colors (works with or without a preset)
+# primary = "#0052CC"
+# success = "#22C55E"
+# danger = "#EF4444"
 ```
 
 ## Related
