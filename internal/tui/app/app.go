@@ -9,6 +9,7 @@ import (
 	"github.com/felipeospina21/jiraf/internal/config"
 	jirafExec "github.com/felipeospina21/jiraf/internal/exec"
 	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/jiraf/internal/tui/boards"
 	"github.com/felipeospina21/jiraf/internal/tui/details"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
@@ -16,22 +17,7 @@ import (
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/popover"
 	"github.com/felipeospina21/tuishell/shell"
-	"github.com/felipeospina21/tuishell/style"
 )
-
-var theme = style.DefaultTheme()
-
-var leftPanelStyle = lipgloss.NewStyle().
-	PaddingRight(4).
-	MarginBottom(2).
-	Foreground(theme.Primary).
-	Border(lipgloss.NormalBorder(), false, true, false, false).
-	BorderForeground(theme.Border).
-	Width(30)
-
-var rightPanelStyle = lipgloss.NewStyle().
-	Border(lipgloss.NormalBorder(), true, false, true, true).
-	BorderForeground(theme.Border)
 
 // Model wraps shell.Model with jiraf-specific domain logic.
 type Model struct {
@@ -54,11 +40,25 @@ func NewApp() tea.Model {
 		os.Exit(1)
 	}
 
+	theme := tui.BuildTheme(cfg.Theme)
+
+	leftPanelStyle := lipgloss.NewStyle().
+		PaddingRight(4).
+		MarginBottom(2).
+		Foreground(theme.Primary).
+		Border(lipgloss.NormalBorder(), false, true, false, false).
+		BorderForeground(theme.Border).
+		Width(30)
+
+	rightPanelStyle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), true, false, true, true).
+		BorderForeground(theme.Border)
+
 	client := jira.NewClient(cfg)
-	b := boards.New(cfg.Filters.Boards)
+	b := boards.New(cfg.Filters.Boards, theme)
 	left := BoardsPanel{Model: &b}
-	main := issues.New()
-	det := details.New()
+	main := issues.New(theme)
+	det := details.New(theme)
 
 	s := shell.New(shell.Config{
 		Theme:           theme,

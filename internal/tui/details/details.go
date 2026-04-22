@@ -11,12 +11,9 @@ import (
 	"charm.land/glamour/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
-	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/style"
 )
-
-var theme = style.DefaultTheme()
 
 // Model holds the state for the details side panel.
 type Model struct {
@@ -25,12 +22,23 @@ type Model struct {
 	issue    *jira.Issue
 	width    int
 	height   int
+	// theme-derived styles
+	keyStyle     lipgloss.Style
+	summaryStyle lipgloss.Style
+	labelStyle   lipgloss.Style
+	valueStyle   lipgloss.Style
+	sectionStyle lipgloss.Style
 }
 
 // New creates a new details panel model.
-func New() Model {
+func New(t style.Theme) Model {
 	return Model{
-		Viewport: viewport.New(viewport.WithWidth(10), viewport.WithHeight(10)),
+		Viewport:     viewport.New(viewport.WithWidth(10), viewport.WithHeight(10)),
+		keyStyle:     lipgloss.NewStyle().Foreground(t.Primary).Bold(true).MarginLeft(1),
+		summaryStyle: lipgloss.NewStyle().Foreground(t.Text).Bold(true).MarginLeft(1),
+		labelStyle:   lipgloss.NewStyle().Foreground(t.TextDimmed).MarginLeft(1).Width(14),
+		valueStyle:   lipgloss.NewStyle().Foreground(t.Text),
+		sectionStyle: lipgloss.NewStyle().Foreground(t.Primary).Bold(true).MarginLeft(1),
 	}
 }
 
@@ -39,7 +47,7 @@ func (m Model) Init() tea.Cmd { return nil }
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
-		match := tui.KeyMatcher(msg)
+		match := tuishell.KeyMatcher(msg)
 		switch {
 		case match(Keybinds.Fullscreen):
 			return m, func() tea.Msg { return tuishell.ToggleFullscreenMsg{} }
@@ -98,39 +106,39 @@ func (m *Model) renderContent() {
 	var b strings.Builder
 
 	// Key + Summary
-	b.WriteString(keyStyle.Render(m.issue.Key))
+	b.WriteString(m.keyStyle.Render(m.issue.Key))
 	b.WriteString("\n")
-	b.WriteString(summaryStyle.Render(f.Summary))
+	b.WriteString(m.summaryStyle.Render(f.Summary))
 	b.WriteString("\n\n")
 
 	// Status / Priority / Type
-	writeField(&b, "Status", f.Status.Name)
-	writeField(&b, "Priority", f.Priority.Name)
-	writeField(&b, "Type", f.IssueType.Name)
+	m.writeField(&b, "Status", f.Status.Name)
+	m.writeField(&b, "Priority", f.Priority.Name)
+	m.writeField(&b, "Type", f.IssueType.Name)
 	b.WriteString("\n")
 
 	// People
 	if f.Assignee != nil {
-		writeField(&b, "Assignee", f.Assignee.DisplayName)
+		m.writeField(&b, "Assignee", f.Assignee.DisplayName)
 	}
 	if f.Reporter != nil {
-		writeField(&b, "Reporter", f.Reporter.DisplayName)
+		m.writeField(&b, "Reporter", f.Reporter.DisplayName)
 	}
 	b.WriteString("\n")
 
 	// Sprint
 	if s := f.ActiveSprint(); s != nil {
-		writeField(&b, "Sprint", s.Name)
+		m.writeField(&b, "Sprint", s.Name)
 	}
 
 	// Story Points
 	if f.StoryPoints != nil {
-		writeField(&b, "Story Points", strconv.Itoa(int(*f.StoryPoints)))
+		m.writeField(&b, "Story Points", strconv.Itoa(int(*f.StoryPoints)))
 	}
 
 	// Labels
 	if len(f.Labels) > 0 {
-		writeField(&b, "Labels", strings.Join(f.Labels, ", "))
+		m.writeField(&b, "Labels", strings.Join(f.Labels, ", "))
 	}
 
 	// Components
@@ -139,20 +147,20 @@ func (m *Model) renderContent() {
 		for i, c := range f.Components {
 			names[i] = c.Name
 		}
-		writeField(&b, "Components", strings.Join(names, ", "))
+		m.writeField(&b, "Components", strings.Join(names, ", "))
 	}
 
 	// Comments
-	writeField(&b, "Comments", strconv.Itoa(f.Comment.Total))
+	m.writeField(&b, "Comments", strconv.Itoa(f.Comment.Total))
 
 	// Dates
-	writeField(&b, "Created", f.Created.Time.Format("2006-01-02 15:04"))
-	writeField(&b, "Updated", f.Updated.Time.Format("2006-01-02 15:04"))
+	m.writeField(&b, "Created", f.Created.Time.Format("2006-01-02 15:04"))
+	m.writeField(&b, "Updated", f.Updated.Time.Format("2006-01-02 15:04"))
 
 	// Description
 	if f.Description != "" || m.issue.RenderedFields.Description != "" {
 		b.WriteString("\n")
-		b.WriteString(sectionStyle.Render("Description"))
+		b.WriteString(m.sectionStyle.Render("Description"))
 		b.WriteString("\n")
 		desc := m.issue.RenderedFields.Description
 		if desc == "" {
@@ -166,8 +174,8 @@ func (m *Model) renderContent() {
 	m.Viewport.SetContent(b.String())
 }
 
-func writeField(b *strings.Builder, label, value string) {
-	b.WriteString(labelStyle.Render(label+":") + " " + valueStyle.Render(value) + "\n")
+func (m *Model) writeField(b *strings.Builder, label, value string) {
+	b.WriteString(m.labelStyle.Render(label+":") + " " + m.valueStyle.Render(value) + "\n")
 }
 
 func renderMarkdown(md string, width int) string {
@@ -185,7 +193,7 @@ func renderMarkdown(md string, width int) string {
 	return strings.TrimSpace(out)
 }
 
-// Styles
+// Styles that don't depend on theme
 var (
 	titleStyle = func() lipgloss.Style {
 		b := lipgloss.RoundedBorder()
@@ -198,10 +206,4 @@ var (
 		b.Left = "┤"
 		return lipgloss.NewStyle().BorderStyle(b).Padding(0)
 	}()
-
-	keyStyle     = lipgloss.NewStyle().Foreground(theme.Primary).Bold(true).MarginLeft(1)
-	summaryStyle = lipgloss.NewStyle().Foreground(theme.Text).Bold(true).MarginLeft(1)
-	labelStyle   = lipgloss.NewStyle().Foreground(theme.TextDimmed).MarginLeft(1).Width(14)
-	valueStyle   = lipgloss.NewStyle().Foreground(theme.Text)
-	sectionStyle = lipgloss.NewStyle().Foreground(theme.Primary).Bold(true).MarginLeft(1)
 )
