@@ -31,9 +31,10 @@ func New(boards []config.Board) Model {
 	for i, b := range boards {
 		items[i] = item{board: b}
 	}
-	l := list.New(items, list.NewDefaultDelegate(), 30, 10)
+	l := list.New(items, itemDelegate{ShowDescription: true, Styles: NewDefaultItemStyles()}, 30, 10)
 	tuishell.ConfigureList(&l)
 	l.Title = "Boards"
+	l.Styles.Title = TitleStyle
 	l.SetShowHelp(false)
 	return Model{List: l}
 }

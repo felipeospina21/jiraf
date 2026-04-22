@@ -9,6 +9,7 @@ import (
 	"github.com/felipeospina21/jiraf/internal/config"
 	jirafExec "github.com/felipeospina21/jiraf/internal/exec"
 	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/jiraf/internal/tui/boards"
 	"github.com/felipeospina21/jiraf/internal/tui/details"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
@@ -16,10 +17,9 @@ import (
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/popover"
 	"github.com/felipeospina21/tuishell/shell"
-	"github.com/felipeospina21/tuishell/style"
 )
 
-var theme = style.DefaultTheme()
+var theme = tui.DefaultTheme()
 
 var leftPanelStyle = lipgloss.NewStyle().
 	PaddingRight(4).

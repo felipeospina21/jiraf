@@ -13,10 +13,9 @@ import (
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/tuishell"
-	"github.com/felipeospina21/tuishell/style"
 )
 
-var theme = style.DefaultTheme()
+var theme = tui.DefaultTheme()
 
 // Model holds the state for the details side panel.
 type Model struct {

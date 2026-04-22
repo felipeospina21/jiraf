@@ -12,11 +12,10 @@ import (
 	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/tuishell"
-	"github.com/felipeospina21/tuishell/style"
 	"github.com/felipeospina21/tuishell/table"
 )
 
-var theme = style.DefaultTheme()
+var theme = tui.DefaultTheme()
 
 const (
 	tableBorderX  = 2
