@@ -98,7 +98,8 @@ export JIRAF_TOKEN="YOUR_JIRA_API_TOKEN"
 | Option           | Description           | Default | Required |
 | ---------------- | --------------------- | ------- | -------- |
 | `base_url`       | Jira instance URL     | —       | Yes      |
-| `filters.boards` | List of board objects | —       | Yes      |
+| `filters.boards` | List of board objects  | —       | Yes      |
+| `theme`          | Color overrides (see [Theme](#theme)) | Jira blue | No |
 
 ### Board object
 
@@ -110,6 +111,42 @@ Each board in `filters.boards` has the following fields:
 | `id`   | `string` | Jira board ID                        |
 | `key`  | `string` | Jira project key (e.g. `PROJ`)       |
 
+### Theme
+
+You can customize the color theme by adding a `[theme]` section to your config file. Each property accepts a hex color string. Only the tokens you specify are overridden — everything else falls back to the default Jira blue palette.
+
+| Token             | Description                        | Default   |
+| ----------------- | ---------------------------------- | --------- |
+| `primary`         | Primary accent color               | `#2684FF` |
+| `primary_bright`  | Brighter primary variant           | `#0065FF` |
+| `primary_fg`      | Foreground on primary backgrounds  | `#DEEBFF` |
+| `primary_dim`     | Dimmed primary for subtle accents  | `#002B6B` |
+| `info`            | Informational color                | `#4C9AFF` |
+| `info_bright`     | Brighter info variant              | `#2684FF` |
+| `success`         | Success / positive state           | `#6beaaf` |
+| `success_bright`  | Brighter success variant           | `#3ad994` |
+| `danger`          | Error / destructive state          | `#f9a8a8` |
+| `danger_bright`   | Brighter danger variant            | `#f47575` |
+| `warning`         | Warning state                      | `#ffe043` |
+| `warning_bright`  | Brighter warning variant           | `#ffcc14` |
+| `caution`         | Caution / attention state          | `#ff8237` |
+| `text`            | Default text color                 | `#C4C4C4` |
+| `text_inverse`    | Text on light backgrounds          | `#111`    |
+| `text_dimmed`     | Dimmed / secondary text            | `#777777` |
+| `muted`           | Muted text                         | `#999999` |
+| `dim`             | Dimmed UI elements                 | `#444444` |
+| `border`          | Panel borders                      | `#3f4145` |
+| `modal_border`    | Modal overlay border               | `#666666` |
+| `surface_dim`     | Dark surface background            | `#091E42` |
+| `selection_border`| Selected item border               | `#0052CC` |
+| `status_text`     | Status bar text                    | `#FFFDF5` |
+| `status_normal`   | Status bar normal mode             | `#0747A6` |
+| `status_loading`  | Status bar loading state           | `#1A7A94` |
+| `status_error`    | Status bar error state             | `#CE3060` |
+| `status_dev`      | Status bar dev mode indicator      | `#4E8212` |
+| `status_accent1`  | Status bar accent 1                | `#0065FF` |
+| `status_accent2`  | Status bar accent 2                | `#003884` |
+
 ### Config example
 
 ```toml
@@ -120,6 +157,12 @@ boards = [
     { name = "Some Board", id = "3588", key = "SMB" },
     { name = "Platform Sprint", id = "42", key = "PLAT" },
 ]
+
+# Optional: override specific theme colors
+[theme]
+primary = "#0052CC"
+success = "#22C55E"
+danger = "#EF4444"
 ```
 
 ## Related

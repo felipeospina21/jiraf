@@ -3,8 +3,10 @@ package boards
 import (
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/config"
 	"github.com/felipeospina21/tuishell"
+	"github.com/felipeospina21/tuishell/style"
 )
 
 // SelectBoardMsg is sent when the user picks a board.
@@ -26,15 +28,15 @@ type Model struct {
 }
 
 // New creates a boards panel from config.
-func New(boards []config.Board) Model {
+func New(boards []config.Board, t style.Theme) Model {
 	items := make([]list.Item, len(boards))
 	for i, b := range boards {
 		items[i] = item{board: b}
 	}
-	l := list.New(items, itemDelegate{ShowDescription: true, Styles: NewDefaultItemStyles()}, 30, 10)
+	l := list.New(items, itemDelegate{ShowDescription: true, Styles: NewDefaultItemStyles(t)}, 30, 10)
 	tuishell.ConfigureList(&l)
 	l.Title = "Boards"
-	l.Styles.Title = TitleStyle
+	l.Styles.Title = lipgloss.NewStyle().Foreground(t.Info)
 	l.SetShowHelp(false)
 	return Model{List: l}
 }

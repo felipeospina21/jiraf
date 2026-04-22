@@ -19,20 +19,6 @@ import (
 	"github.com/felipeospina21/tuishell/shell"
 )
 
-var theme = tui.DefaultTheme()
-
-var leftPanelStyle = lipgloss.NewStyle().
-	PaddingRight(4).
-	MarginBottom(2).
-	Foreground(theme.Primary).
-	Border(lipgloss.NormalBorder(), false, true, false, false).
-	BorderForeground(theme.Border).
-	Width(30)
-
-var rightPanelStyle = lipgloss.NewStyle().
-	Border(lipgloss.NormalBorder(), true, false, true, true).
-	BorderForeground(theme.Border)
-
 // Model wraps shell.Model with jiraf-specific domain logic.
 type Model struct {
 	Shell   shell.Model
@@ -54,11 +40,25 @@ func NewApp() tea.Model {
 		os.Exit(1)
 	}
 
+	theme := tui.BuildTheme(cfg.Theme)
+
+	leftPanelStyle := lipgloss.NewStyle().
+		PaddingRight(4).
+		MarginBottom(2).
+		Foreground(theme.Primary).
+		Border(lipgloss.NormalBorder(), false, true, false, false).
+		BorderForeground(theme.Border).
+		Width(30)
+
+	rightPanelStyle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), true, false, true, true).
+		BorderForeground(theme.Border)
+
 	client := jira.NewClient(cfg)
-	b := boards.New(cfg.Filters.Boards)
+	b := boards.New(cfg.Filters.Boards, theme)
 	left := BoardsPanel{Model: &b}
-	main := issues.New()
-	det := details.New()
+	main := issues.New(theme)
+	det := details.New(theme)
 
 	s := shell.New(shell.Config{
 		Theme:           theme,

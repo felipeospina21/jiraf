@@ -7,15 +7,13 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/tuishell"
+	"github.com/felipeospina21/tuishell/style"
 	"github.com/felipeospina21/tuishell/table"
 )
-
-var theme = tui.DefaultTheme()
 
 const (
 	tableBorderX  = 2
@@ -23,11 +21,6 @@ const (
 	headerLines   = 1
 	tableOverhead = 1
 )
-
-var titleStyle = lipgloss.NewStyle().
-	Margin(0, 0, 0, 1).
-	Foreground(theme.Primary).
-	Bold(true)
 
 // FetchedMsg carries the result of an issues fetch.
 type FetchedMsg struct {
@@ -81,13 +74,15 @@ type Model struct {
 	SelectedBoard string
 	Loading       bool
 	SpinnerView   string
+	theme         style.Theme
 	width         int
 	height        int
 }
 
-func New() Model {
+func New(t style.Theme) Model {
 	return Model{
 		Table: table.New(table.WithFocused(true)),
+		theme: t,
 	}
 }
 
@@ -129,7 +124,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if h < 3 {
 			h = 3
 		}
-		s := table.ThemedStyles(theme)
+		s := table.ThemedStyles(m.theme)
 		m.Table = table.InitModel(table.InitModelParams{
 			Rows:   rows,
 			Colums: getTableCols(tableW),
@@ -176,11 +171,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() tea.View {
 	header := fmt.Sprintf("%s - Issues", m.SelectedBoard)
-	return tea.NewView(table.RenderPanel(theme, &m.Table, m.Loading, m.SpinnerView, header))
+	return tea.NewView(table.RenderPanel(m.theme, &m.Table, m.Loading, m.SpinnerView, header))
 }
 
 func (m Model) tableWidth() int {
-	return m.width - table.DocStyle(theme).GetHorizontalFrameSize() - tableBorderX
+	return m.width - table.DocStyle(m.theme).GetHorizontalFrameSize() - tableBorderX
 }
 
 func issueToRow(i jira.Issue) table.Row {

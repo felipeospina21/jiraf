@@ -9,15 +9,10 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/felipeospina21/jiraf/internal/tui"
+	"github.com/felipeospina21/tuishell/style"
 )
 
 const ellipsis = "…"
-
-var theme = tui.DefaultTheme()
-
-var TitleStyle = lipgloss.NewStyle().
-	Foreground(theme.Info)
 
 type DefaultItemStyles struct {
 	NormalTitle    lipgloss.Style
@@ -29,30 +24,30 @@ type DefaultItemStyles struct {
 	FilterMatch    lipgloss.Style
 }
 
-func NewDefaultItemStyles() (s DefaultItemStyles) {
+func NewDefaultItemStyles(t style.Theme) (s DefaultItemStyles) {
 	s.NormalTitle = lipgloss.NewStyle().
-		Foreground(theme.PrimaryFg).
+		Foreground(t.PrimaryFg).
 		Padding(0, 0, 0, 2)
 
 	s.NormalDesc = lipgloss.NewStyle().
-		Foreground(theme.TextDimmed).
+		Foreground(t.TextDimmed).
 		Padding(0, 0, 0, 2)
 
 	s.SelectedTitle = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
-		BorderForeground(theme.SelectionBorder).
-		Foreground(theme.PrimaryBright).
+		BorderForeground(t.SelectionBorder).
+		Foreground(t.PrimaryBright).
 		Padding(0, 0, 0, 1)
 
 	s.SelectedDesc = s.SelectedTitle.
-		Foreground(theme.PrimaryBright)
+		Foreground(t.PrimaryBright)
 
 	s.DimmedTitle = lipgloss.NewStyle().
-		Foreground(theme.TextDimmed).
+		Foreground(t.TextDimmed).
 		Padding(0, 0, 0, 2)
 
 	s.DimmedDesc = lipgloss.NewStyle().
-		Foreground(theme.Dim)
+		Foreground(t.Dim)
 
 	s.FilterMatch = lipgloss.NewStyle().Underline(true)
 
