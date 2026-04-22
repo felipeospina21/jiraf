@@ -23,6 +23,7 @@ _(none)_
 
 ### Medium
 
+- [ ] In-app theme selector with live preview and config persistence ([#31](https://github.com/felipeospina21/jiraf/issues/31))
 - [ ] API response caching with configurable TTL ([#23](https://github.com/felipeospina21/jiraf/issues/23))
 - [ ] Custom theme colors via config ([#24](https://github.com/felipeospina21/jiraf/issues/24))
 - [ ] Edit issue (summary, description, priority, labels) ([#21](https://github.com/felipeospina21/jiraf/issues/21))
