@@ -18,7 +18,7 @@ type transitionsResponse struct {
 
 // GetTransitions fetches available transitions for an issue.
 func (c *Client) GetTransitions(issueKey string) ([]Transition, error) {
-	if c.devMode {
+	if c.demoMode {
 		time.Sleep(500 * time.Millisecond)
 		return MockTransitions, nil
 	}
@@ -31,7 +31,7 @@ func (c *Client) GetTransitions(issueKey string) ([]Transition, error) {
 
 // DoTransition executes a status transition on an issue.
 func (c *Client) DoTransition(issueKey, transitionID string) error {
-	if c.devMode {
+	if c.demoMode {
 		time.Sleep(500 * time.Millisecond)
 		return nil
 	}

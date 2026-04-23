@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -51,7 +52,7 @@ type ThemeOverrides struct {
 	StatusNormal    *string `mapstructure:"status_normal"`
 	StatusLoading   *string `mapstructure:"status_loading"`
 	StatusError     *string `mapstructure:"status_error"`
-	StatusDev       *string `mapstructure:"status_dev"`
+	StatusDemo      *string `mapstructure:"status_demo"`
 	StatusAccent1   *string `mapstructure:"status_accent1"`
 	StatusAccent2   *string `mapstructure:"status_accent2"`
 }
@@ -62,7 +63,7 @@ type Config struct {
 	APIToken string
 	Filters  Filter         `mapstructure:"filters"`
 	Theme    ThemeOverrides `mapstructure:"theme"`
-	DevMode  bool
+	DemoMode bool
 }
 
 var (
@@ -72,7 +73,7 @@ var (
 
 // Load reads the config file and environment variables.
 func Load(config *Config) error {
-	config.DevMode = isDevMode()
+	config.DemoMode = isDemoMode()
 
 	viper.SetConfigName(cmdName)
 	viper.SetConfigType("toml")
@@ -82,7 +83,7 @@ func Load(config *Config) error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		if config.DevMode {
+		if config.DemoMode {
 			config.BaseURL = "https://acme.atlassian.net"
 			config.Filters.Boards = mockBoards
 			return nil
@@ -98,7 +99,7 @@ func Load(config *Config) error {
 		return errors.New("base_url is required")
 	}
 
-	if config.DevMode {
+	if config.DemoMode {
 		config.Filters.Boards = mockBoards
 		return nil
 	}
@@ -113,7 +114,7 @@ func loadEnvVars(config *Config) error {
 
 	token := viper.GetString("token")
 
-	if !config.DevMode {
+	if !config.DemoMode {
 		if token == "" {
 			return errors.New("JIRAF_TOKEN not set")
 		}
@@ -123,13 +124,14 @@ func loadEnvVars(config *Config) error {
 	return nil
 }
 
-var devFlag = flag.Bool("dev", false, "use mocked data instead of calling Jira API")
+var flags = flag.NewFlagSet("jiraf", flag.ExitOnError)
+var demoFlag = flags.Bool("demo", false, "use mocked data instead of calling Jira API")
 
-func isDevMode() bool {
-	if !flag.Parsed() {
-		flag.Parse()
+func isDemoMode() bool {
+	if !flags.Parsed() {
+		flags.Parse(os.Args[1:])
 	}
-	return *devFlag
+	return *demoFlag
 }
 
 var mockBoards = []Board{

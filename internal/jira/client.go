@@ -15,14 +15,14 @@ type Client struct {
 	baseURL    string
 	httpClient *http.Client
 	token      string
-	devMode    bool
+	demoMode   bool
 }
 
 func NewClient(cfg *config.Config) *Client {
 	return &Client{
 		baseURL:    cfg.BaseURL,
 		token:      cfg.APIToken,
-		devMode:    cfg.DevMode,
+		demoMode:   cfg.DemoMode,
 		httpClient: &http.Client{
 			Timeout:       10 * time.Second,
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
