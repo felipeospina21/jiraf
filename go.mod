@@ -8,7 +8,7 @@ require (
 	charm.land/glamour/v2 v2.0.0
 	charm.land/lipgloss/v2 v2.0.2
 	github.com/charmbracelet/x/ansi v0.11.6
-	github.com/felipeospina21/tuishell v0.8.0
+	github.com/felipeospina21/tuishell v0.9.0
 	github.com/spf13/viper v1.21.0
 	golang.org/x/net v0.52.0
 )
