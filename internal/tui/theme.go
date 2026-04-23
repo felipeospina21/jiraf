@@ -48,7 +48,7 @@ func BuildTheme(overrides config.ThemeOverrides) style.Theme {
 	applyOverride(&t.StatusNormal, overrides.StatusNormal)
 	applyOverride(&t.StatusLoading, overrides.StatusLoading)
 	applyOverride(&t.StatusError, overrides.StatusError)
-	applyOverride(&t.StatusDev, overrides.StatusDev)
+	applyOverride(&t.StatusDemo, overrides.StatusDemo)
 	applyOverride(&t.StatusAccent1, overrides.StatusAccent1)
 	applyOverride(&t.StatusAccent2, overrides.StatusAccent2)
 	return t
@@ -86,7 +86,7 @@ func DefaultTheme() style.Theme {
 		StatusNormal:  lipgloss.Color("#0747A6"),
 		StatusLoading: lipgloss.Color("#1A7A94"),
 		StatusError:   lipgloss.Color("#CE3060"),
-		StatusDev:     lipgloss.Color("#4E8212"),
+		StatusDemo:     lipgloss.Color("#4E8212"),
 		StatusAccent1: lipgloss.Color("#0065FF"),
 		StatusAccent2: lipgloss.Color("#003884"),
 	}

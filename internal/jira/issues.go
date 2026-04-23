@@ -10,7 +10,7 @@ const issueFields = "summary,description,status,priority,issuetype,assignee,repo
 
 // GetMyIssues fetches issues assigned to the current user for a given project key.
 func (c *Client) GetMyIssues(projectKey string) ([]Issue, error) {
-	if c.devMode {
+	if c.demoMode {
 		time.Sleep(1 * time.Second)
 		return MockIssues, nil
 	}
