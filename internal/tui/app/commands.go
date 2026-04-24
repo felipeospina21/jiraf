@@ -6,8 +6,9 @@ import (
 )
 
 func (m Model) fetchIssues(projectKey string) tea.Cmd {
+	filters := m.activeFilters
 	return func() tea.Msg {
-		iss, err := m.client.GetMyIssues(projectKey)
+		iss, err := m.client.GetMyIssues(projectKey, filters)
 		return issues.FetchedMsg{Issues: iss, Err: err}
 	}
 }

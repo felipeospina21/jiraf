@@ -17,6 +17,13 @@ type Model struct {
 	Details *details.Model
 	client  *jira.Client
 
+	// Filter state
+	filterPopover    popover.FilterModel
+	activeFilters    jira.IssueFilters
+	knownStatuses    map[string]bool
+	knownPriorities  map[string]bool
+	knownTypes       map[string]bool
+
 	// Transition state
 	pendingTransition     string // issue key awaiting transition
 	pendingTransitionName string // selected transition name awaiting confirmation

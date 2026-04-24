@@ -62,6 +62,7 @@ func NewApp() tea.Model {
 		Shell:            s,
 		Details:          &det,
 		client:           client,
+		filterPopover:    popover.NewFilter(theme),
 		confirmPopover:   popover.NewConfirm(theme),
 		transitionPicker: popover.NewList(theme),
 	}
