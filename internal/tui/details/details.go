@@ -9,10 +9,13 @@ import (
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/glamour/v2"
+	"charm.land/glamour/v2/styles"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
+	"github.com/felipeospina21/jiraf/internal/tui/icon"
 	"github.com/felipeospina21/tuishell"
 	"github.com/felipeospina21/tuishell/style"
+	"github.com/felipeospina21/tuishell/table"
 )
 
 // Model holds the state for the details side panel.
@@ -150,9 +153,6 @@ func (m *Model) renderContent() {
 		m.writeField(&b, "Components", strings.Join(names, ", "))
 	}
 
-	// Comments
-	m.writeField(&b, "Comments", strconv.Itoa(f.Comment.Total))
-
 	// Dates
 	m.writeField(&b, "Created", f.Created.Time.Format("2006-01-02 15:04"))
 	m.writeField(&b, "Updated", f.Updated.Time.Format("2006-01-02 15:04"))
@@ -167,11 +167,36 @@ func (m *Model) renderContent() {
 			desc = f.Description
 		}
 		md := jira.HTMLToMarkdown(desc)
-		b.WriteString(renderMarkdown(md, m.width))
+		b.WriteString(lipgloss.NewStyle().PaddingLeft(1).Render(renderMarkdown(md, m.width-1)))
 		b.WriteString("\n")
 	}
 
+	// Comments
+	if len(f.Comment.Comments) > 0 {
+		m.writeHeader(&b, icon.Comment, fmt.Sprintf("Comments (%d)", f.Comment.Total))
+		for i, c := range f.Comment.Comments {
+			b.WriteString(m.keyStyle.Render(c.Author.DisplayName))
+			b.WriteString("  ")
+			b.WriteString(m.labelStyle.Render(timeAgo(table.FormatTime(c.Created.Time))))
+			b.WriteString("\n")
+			b.WriteString(lipgloss.NewStyle().PaddingLeft(1).Render(renderMarkdown(c.Body, m.width-1)))
+			b.WriteString("\n")
+			if i < len(f.Comment.Comments)-1 {
+				b.WriteString("\n")
+			}
+		}
+	} else {
+		m.writeHeader(&b, icon.Comment, "Comments")
+		b.WriteString(m.labelStyle.Italic(true).Width(0).Render("There are no comments yet in this issue"))
+	}
+
 	m.Viewport.SetContent(b.String())
+}
+
+func (m *Model) writeHeader(b *strings.Builder, icon, label string) {
+	b.WriteString("\n")
+	b.WriteString(m.sectionStyle.Render(fmt.Sprintf("%s %s", icon, label)))
+	b.WriteString("\n\n")
 }
 
 func (m *Model) writeField(b *strings.Builder, label, value string) {
@@ -179,8 +204,11 @@ func (m *Model) writeField(b *strings.Builder, label, value string) {
 }
 
 func renderMarkdown(md string, width int) string {
+	s := styles.DarkStyleConfig
+	zero := uint(0)
+	s.Document.Margin = &zero
 	r, err := glamour.NewTermRenderer(
-		glamour.WithStandardStyle("dark"),
+		glamour.WithStyles(s),
 		glamour.WithWordWrap(width),
 	)
 	if err != nil {
@@ -207,3 +235,7 @@ var (
 		return lipgloss.NewStyle().BorderStyle(b).Padding(0)
 	}()
 )
+
+func timeAgo(time string) string {
+	return fmt.Sprintf("%s ago", time)
+}
