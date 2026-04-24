@@ -93,8 +93,16 @@ type UserField struct {
 	DisplayName string `json:"displayName"`
 }
 
+type Comment struct {
+	Author  UserField `json:"author"`
+	Body    string    `json:"body"`
+	Created JiraTime  `json:"created"`
+	Updated JiraTime  `json:"updated"`
+}
+
 type CommentField struct {
-	Total int `json:"total"`
+	Total    int       `json:"total"`
+	Comments []Comment `json:"comments"`
 }
 
 // Sprint holds parsed sprint data from the Java toString format.
