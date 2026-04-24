@@ -46,6 +46,12 @@ type OpenInBrowserMsg struct {
 // RefetchMsg is sent when the user wants to refetch the issues list.
 type RefetchMsg struct{}
 
+// OpenFilterMsg is sent when the user wants to open the filter popover.
+type OpenFilterMsg struct{}
+
+// ClearFilterMsg is sent when the user wants to clear all active filters.
+type ClearFilterMsg struct{}
+
 var cols = []table.Column{
 	{Name: "created", Title: icon.Clock, Width: 3},
 	{Name: "priority", Title: "Priority", Width: 4, Centered: true},
@@ -161,6 +167,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case match(Keybinds.Refetch):
 			return m, func() tea.Msg { return RefetchMsg{} }
+		case match(Keybinds.Filter):
+			if len(m.Issues) > 0 {
+				return m, func() tea.Msg { return OpenFilterMsg{} }
+			}
+		case match(Keybinds.ClearFilter):
+			if len(m.Issues) > 0 {
+				return m, func() tea.Msg { return ClearFilterMsg{} }
+			}
 		}
 		var cmd tea.Cmd
 		m.Table, cmd = m.Table.Update(msg)

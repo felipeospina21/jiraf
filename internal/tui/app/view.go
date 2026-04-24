@@ -14,5 +14,9 @@ func (m Model) View() tea.View {
 		screen := m.transitionPicker.View(v.Content, w, h)
 		return tea.View{Content: screen, AltScreen: v.AltScreen}
 	}
+	if m.filterPopover.IsOpen() {
+		screen := m.filterPopover.View(v.Content, w, h)
+		return tea.View{Content: screen, AltScreen: v.AltScreen}
+	}
 	return v
 }

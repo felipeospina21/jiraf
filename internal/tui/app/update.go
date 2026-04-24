@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/felipeospina21/jiraf/internal/config"
@@ -26,7 +28,11 @@ type TransitionDoneMsg struct {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case boards.SelectBoardMsg:
-		// Update the board name and set loading state on the issues panel
+		// Reset filters and known values when switching boards
+		m.activeFilters = jira.IssueFilters{}
+		m.knownStatuses = nil
+		m.knownPriorities = nil
+		m.knownTypes = nil
 		if main, ok := m.Shell.Main.(issues.Model); ok {
 			main.SelectedBoard = msg.Key
 			main.Loading = true
@@ -37,6 +43,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			func() tea.Msg { return tuishell.CloseLeftPanelMsg{} },
 			func() tea.Msg { return tuishell.StartTaskMsg{Cmd: m.fetchIssues(msg.Key)} },
 		)
+
+	case issues.FetchedMsg:
+		// Collect known filter values from fetched issues
+		if msg.Err == nil {
+			if m.knownStatuses == nil {
+				m.knownStatuses = map[string]bool{}
+			}
+			if m.knownPriorities == nil {
+				m.knownPriorities = map[string]bool{}
+			}
+			if m.knownTypes == nil {
+				m.knownTypes = map[string]bool{}
+			}
+			for _, i := range msg.Issues {
+				m.knownStatuses[i.Fields.Status.Name] = true
+				m.knownPriorities[i.Fields.Priority.Name] = true
+				m.knownTypes[i.Fields.IssueType.Name] = true
+			}
+		}
 
 	case issues.ViewDetailsMsg:
 		m.Details.SetContent(msg.Issue)
@@ -117,6 +142,79 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.transitionIDByName = nil
 		m.transitionPicker.Close()
 
+	case issues.OpenFilterMsg:
+		// Include active filter values in known sets so they always appear
+		if m.knownStatuses == nil {
+			m.knownStatuses = map[string]bool{}
+		}
+		// Always include excluded-by-default statuses so they're visible
+		m.knownStatuses["Done"] = true
+		m.knownStatuses["Withdrawn"] = true
+		for _, v := range m.activeFilters.Statuses {
+			m.knownStatuses[v] = true
+		}
+		for _, v := range m.activeFilters.Priorities {
+			if m.knownPriorities == nil {
+				m.knownPriorities = map[string]bool{}
+			}
+			m.knownPriorities[v] = true
+		}
+		for _, v := range m.activeFilters.Types {
+			if m.knownTypes == nil {
+				m.knownTypes = map[string]bool{}
+			}
+			m.knownTypes[v] = true
+		}
+		sections := buildFilterSections(m.knownStatuses, m.knownPriorities, m.knownTypes, m.activeFilters)
+		inputs := []tuishell.FilterInput{
+			{Title: "Sprint", Placeholder: "e.g. 42", Value: m.activeFilters.Sprint},
+		}
+		m.filterPopover.Open(sections, inputs)
+		return m, nil
+
+	case tuishell.ApplyFilterPopoverMsg:
+		m.filterPopover.Close()
+		m.activeFilters = jira.IssueFilters{
+			Statuses:   msg.Selections["Status"],
+			Priorities: msg.Selections["Priority"],
+			Types:      msg.Selections["Type"],
+			Sprint:     strings.TrimSpace(msg.Inputs["Sprint"]),
+		}
+		if main, ok := m.Shell.Main.(issues.Model); ok && main.SelectedBoard != "" {
+			main.Loading = true
+			main.SpinnerView = m.Shell.Spinner.View()
+			m.Shell.Main = main
+			var cmds []tea.Cmd
+			cmds = append(cmds, func() tea.Msg {
+				return tuishell.StartTaskMsg{Cmd: m.fetchIssues(main.SelectedBoard)}
+			})
+			if m.activeFilters.HasActive() {
+				cmds = append(cmds, func() tea.Msg {
+					return tuishell.SetStatusMsg{Content: filterStatusText(m.activeFilters)}
+				})
+			} else {
+				cmds = append(cmds, func() tea.Msg {
+					return tuishell.SetStatusMsg{Content: ""}
+				})
+			}
+			return m, tea.Batch(cmds...)
+		}
+
+	case tuishell.CloseFilterPopoverMsg:
+		m.filterPopover.Close()
+
+	case issues.ClearFilterMsg:
+		m.activeFilters = jira.IssueFilters{}
+		if main, ok := m.Shell.Main.(issues.Model); ok && main.SelectedBoard != "" {
+			main.Loading = true
+			main.SpinnerView = m.Shell.Spinner.View()
+			m.Shell.Main = main
+			return m, tea.Batch(
+				func() tea.Msg { return tuishell.SetStatusMsg{Content: ""} },
+				func() tea.Msg { return tuishell.StartTaskMsg{Cmd: m.fetchIssues(main.SelectedBoard)} },
+			)
+		}
+
 	case TransitionDoneMsg:
 		if msg.Err != nil {
 			return m, func() tea.Msg {
@@ -165,6 +263,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// Route keys to filter popover when open
+	if m.filterPopover.IsOpen() {
+		if _, ok := msg.(tea.KeyPressMsg); ok {
+			var cmd tea.Cmd
+			m.filterPopover, cmd = m.filterPopover.Update(msg)
+			return m, cmd
+		}
+	}
+
 	var cmd tea.Cmd
 	m.Shell, cmd = m.Shell.Update(msg)
 	m.syncKeybinds()
@@ -181,4 +288,54 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, cmd
+}
+
+func buildFilterSections(statuses, priorities, types map[string]bool, active jira.IssueFilters) []tuishell.FilterSection {
+	makeSection := func(title string, vals map[string]bool, selected []string) tuishell.FilterSection {
+		sel := map[string]bool{}
+		for _, v := range selected {
+			sel[v] = true
+		}
+		keys := make([]string, 0, len(vals))
+		for k := range vals {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		opts := make([]tuishell.FilterOption, len(keys))
+		for i, k := range keys {
+			opts[i] = tuishell.FilterOption{Label: k, Value: k, Selected: sel[k]}
+		}
+		return tuishell.FilterSection{Title: title, Options: opts}
+	}
+
+	statusSection := makeSection("Status", statuses, active.Statuses)
+	// Default: select all statuses except Done and Withdrawn when no filter is active
+	if len(active.Statuses) == 0 {
+		for i, opt := range statusSection.Options {
+			statusSection.Options[i].Selected = opt.Value != "Done" && opt.Value != "Withdrawn"
+		}
+	}
+
+	return []tuishell.FilterSection{
+		statusSection,
+		makeSection("Priority", priorities, active.Priorities),
+		makeSection("Type", types, active.Types),
+	}
+}
+
+func filterStatusText(f jira.IssueFilters) string {
+	var parts []string
+	if len(f.Statuses) > 0 {
+		parts = append(parts, fmt.Sprintf("Status(%d)", len(f.Statuses)))
+	}
+	if len(f.Priorities) > 0 {
+		parts = append(parts, fmt.Sprintf("Priority(%d)", len(f.Priorities)))
+	}
+	if len(f.Types) > 0 {
+		parts = append(parts, fmt.Sprintf("Type(%d)", len(f.Types)))
+	}
+	if f.Sprint != "" {
+		parts = append(parts, fmt.Sprintf("Sprint %s", f.Sprint))
+	}
+	return "Filtered: " + strings.Join(parts, ", ")
 }
