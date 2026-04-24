@@ -32,6 +32,8 @@ func (c *Client) GetMyIssues(projectKey string, filters IssueFilters) ([]Issue, 
 	jql := fmt.Sprintf("assignee=currentUser() AND project=%s", projectKey)
 	if len(filters.Statuses) > 0 {
 		jql += fmt.Sprintf(` AND status IN ("%s")`, strings.Join(filters.Statuses, `", "`))
+	} else {
+		jql += ` AND status NOT IN (Done, Withdrawn)`
 	}
 	if len(filters.Priorities) > 0 {
 		jql += fmt.Sprintf(` AND priority IN ("%s")`, strings.Join(filters.Priorities, `", "`))

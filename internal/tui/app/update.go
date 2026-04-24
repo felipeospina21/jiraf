@@ -144,10 +144,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case issues.OpenFilterMsg:
 		// Include active filter values in known sets so they always appear
+		if m.knownStatuses == nil {
+			m.knownStatuses = map[string]bool{}
+		}
+		// Always include excluded-by-default statuses so they're visible
+		m.knownStatuses["Done"] = true
+		m.knownStatuses["Withdrawn"] = true
 		for _, v := range m.activeFilters.Statuses {
-			if m.knownStatuses == nil {
-				m.knownStatuses = map[string]bool{}
-			}
 			m.knownStatuses[v] = true
 		}
 		for _, v := range m.activeFilters.Priorities {
@@ -305,8 +308,16 @@ func buildFilterSections(statuses, priorities, types map[string]bool, active jir
 		return tuishell.FilterSection{Title: title, Options: opts}
 	}
 
+	statusSection := makeSection("Status", statuses, active.Statuses)
+	// Default: select all statuses except Done and Withdrawn when no filter is active
+	if len(active.Statuses) == 0 {
+		for i, opt := range statusSection.Options {
+			statusSection.Options[i].Selected = opt.Value != "Done" && opt.Value != "Withdrawn"
+		}
+	}
+
 	return []tuishell.FilterSection{
-		makeSection("Status", statuses, active.Statuses),
+		statusSection,
 		makeSection("Priority", priorities, active.Priorities),
 		makeSection("Type", types, active.Types),
 	}

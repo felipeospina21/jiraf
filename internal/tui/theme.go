@@ -58,7 +58,7 @@ func BuildTheme(overrides config.ThemeOverrides) style.Theme {
 func DefaultTheme() style.Theme {
 	return style.Theme{
 		Primary:       lipgloss.Color("#2684FF"),
-		PrimaryBright: lipgloss.Color("#0065FF"),
+		PrimaryBright: lipgloss.Color("#8AC4FF"),
 		PrimaryFg:     lipgloss.Color("#DEEBFF"),
 		PrimaryDim:    lipgloss.Color("#002B6B"),
 
