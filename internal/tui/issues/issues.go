@@ -168,9 +168,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case match(Keybinds.Refetch):
 			return m, func() tea.Msg { return RefetchMsg{} }
 		case match(Keybinds.Filter):
-			return m, func() tea.Msg { return OpenFilterMsg{} }
+			if len(m.Issues) > 0 {
+				return m, func() tea.Msg { return OpenFilterMsg{} }
+			}
 		case match(Keybinds.ClearFilter):
-			return m, func() tea.Msg { return ClearFilterMsg{} }
+			if len(m.Issues) > 0 {
+				return m, func() tea.Msg { return ClearFilterMsg{} }
+			}
 		}
 		var cmd tea.Cmd
 		m.Table, cmd = m.Table.Update(msg)
