@@ -163,7 +163,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.knownTypes[v] = true
 		}
 		sections := buildFilterSections(m.knownStatuses, m.knownPriorities, m.knownTypes, m.activeFilters)
-		m.filterPopover.Open(sections)
+		inputs := []tuishell.FilterInput{
+			{Title: "Sprint", Placeholder: "e.g. 42", Value: m.activeFilters.Sprint},
+		}
+		m.filterPopover.Open(sections, inputs)
 		return m, nil
 
 	case tuishell.ApplyFilterPopoverMsg:
@@ -172,6 +175,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Statuses:   msg.Selections["Status"],
 			Priorities: msg.Selections["Priority"],
 			Types:      msg.Selections["Type"],
+			Sprint:     strings.TrimSpace(msg.Inputs["Sprint"]),
 		}
 		if main, ok := m.Shell.Main.(issues.Model); ok && main.SelectedBoard != "" {
 			main.Loading = true
@@ -318,6 +322,9 @@ func filterStatusText(f jira.IssueFilters) string {
 	}
 	if len(f.Types) > 0 {
 		parts = append(parts, fmt.Sprintf("Type(%d)", len(f.Types)))
+	}
+	if f.Sprint != "" {
+		parts = append(parts, fmt.Sprintf("Sprint %s", f.Sprint))
 	}
 	return "Filtered: " + strings.Join(parts, ", ")
 }

@@ -14,11 +14,12 @@ type IssueFilters struct {
 	Statuses   []string
 	Priorities []string
 	Types      []string
+	Sprint     string
 }
 
 // HasActive reports whether any filter is set.
 func (f IssueFilters) HasActive() bool {
-	return len(f.Statuses) > 0 || len(f.Priorities) > 0 || len(f.Types) > 0
+	return len(f.Statuses) > 0 || len(f.Priorities) > 0 || len(f.Types) > 0 || f.Sprint != ""
 }
 
 // GetMyIssues fetches issues assigned to the current user for a given project key.
@@ -37,6 +38,9 @@ func (c *Client) GetMyIssues(projectKey string, filters IssueFilters) ([]Issue, 
 	}
 	if len(filters.Types) > 0 {
 		jql += fmt.Sprintf(` AND issuetype IN ("%s")`, strings.Join(filters.Types, `", "`))
+	}
+	if filters.Sprint != "" {
+		jql += fmt.Sprintf(` AND sprint = "Sprint %s"`, filters.Sprint)
 	}
 
 	jql += " ORDER BY priority DESC, updated DESC"
