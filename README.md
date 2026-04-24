@@ -58,6 +58,11 @@ jiraf -dev
 
 - Browse Jira issues for your configured boards
 - View issues by board with sprint filtering
+- Filter issues server-side by status, priority, type, and sprint number
+- View issue details with markdown rendering and comments
+- Transition issue status with confirmation
+- Open issues in browser
+- Custom theme colors via config with preset support
 - Navigate between boards and issues panels
 
 ## Keybindings
@@ -78,10 +83,16 @@ jiraf -dev
 
 ### Issues panel
 
-| Key   | Action    |
-| ----- | --------- |
-| `↑/k` | Move up   |
-| `↓/j` | Move down |
+| Key   | Action          |
+| ----- | --------------- |
+| `↑/k` | Move up         |
+| `↓/j` | Move down       |
+| `enter/l` | View details |
+| `x`   | Open in browser |
+| `T`   | Transition status |
+| `r`   | Refetch issues  |
+| `/`   | Open filter     |
+| `F`   | Clear filters   |
 
 ## Config
 
@@ -137,7 +148,7 @@ preset = "catppuccin-mocha"
 | Token             | Description                        | Default   |
 | ----------------- | ---------------------------------- | --------- |
 | `primary`         | Primary accent color               | `#2684FF` |
-| `primary_bright`  | Brighter primary variant           | `#0065FF` |
+| `primary_bright`  | Brighter primary variant           | `#8AC4FF` |
 | `primary_fg`      | Foreground on primary backgrounds  | `#DEEBFF` |
 | `primary_dim`     | Dimmed primary for subtle accents  | `#002B6B` |
 | `info`            | Informational color                | `#4C9AFF` |
