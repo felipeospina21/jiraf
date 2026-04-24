@@ -9,6 +9,7 @@ import (
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/glamour/v2"
+	"charm.land/glamour/v2/styles"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui/icon"
@@ -166,7 +167,7 @@ func (m *Model) renderContent() {
 			desc = f.Description
 		}
 		md := jira.HTMLToMarkdown(desc)
-		b.WriteString(renderMarkdown(md, m.width))
+		b.WriteString(lipgloss.NewStyle().PaddingLeft(1).Render(renderMarkdown(md, m.width-1)))
 		b.WriteString("\n")
 	}
 
@@ -178,7 +179,7 @@ func (m *Model) renderContent() {
 			b.WriteString("  ")
 			b.WriteString(m.labelStyle.Render(timeAgo(table.FormatTime(c.Created.Time))))
 			b.WriteString("\n")
-			b.WriteString(renderMarkdown(c.Body, m.width))
+			b.WriteString(lipgloss.NewStyle().PaddingLeft(1).Render(renderMarkdown(c.Body, m.width-1)))
 			b.WriteString("\n")
 			if i < len(f.Comment.Comments)-1 {
 				b.WriteString("\n")
@@ -186,7 +187,7 @@ func (m *Model) renderContent() {
 		}
 	} else {
 		m.writeHeader(&b, icon.Comment, "Comments")
-		b.WriteString("There are no comments yet in this issue")
+		b.WriteString(m.labelStyle.Italic(true).Width(0).Render("There are no comments yet in this issue"))
 	}
 
 	m.Viewport.SetContent(b.String())
@@ -203,8 +204,11 @@ func (m *Model) writeField(b *strings.Builder, label, value string) {
 }
 
 func renderMarkdown(md string, width int) string {
+	s := styles.DarkStyleConfig
+	zero := uint(0)
+	s.Document.Margin = &zero
 	r, err := glamour.NewTermRenderer(
-		glamour.WithStandardStyle("dark"),
+		glamour.WithStyles(s),
 		glamour.WithWordWrap(width),
 	)
 	if err != nil {
