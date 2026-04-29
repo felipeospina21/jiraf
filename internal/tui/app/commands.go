@@ -26,3 +26,10 @@ func (m Model) doTransition(issueKey, transitionID string) tea.Cmd {
 		return TransitionDoneMsg{Err: err}
 	}
 }
+
+func (m Model) addComment(issueKey, body string) tea.Cmd {
+	return func() tea.Msg {
+		err := m.client.AddComment(issueKey, body)
+		return CommentAddedMsg{Err: err}
+	}
+}

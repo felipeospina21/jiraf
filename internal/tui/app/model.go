@@ -1,6 +1,7 @@
 package app
 
 import (
+	"charm.land/bubbles/v2/textarea"
 	tea "charm.land/bubbletea/v2"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui/boards"
@@ -15,6 +16,7 @@ import (
 type Model struct {
 	Shell   shell.Model
 	Details *details.Model
+	Input   textarea.Model
 	client  *jira.Client
 
 	// Filter state
@@ -30,6 +32,9 @@ type Model struct {
 	confirmPopover        popover.ConfirmModel
 	transitionPicker      popover.ListModel
 	transitionIDByName    map[string]string
+
+	// Comment state
+	pendingComment string // issue key awaiting comment submission
 }
 
 func (m Model) Init() tea.Cmd {
