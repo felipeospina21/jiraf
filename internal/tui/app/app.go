@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"charm.land/bubbles/v2/textarea"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/felipeospina21/jiraf/internal/config"
@@ -58,9 +59,14 @@ func NewApp() tea.Model {
 		RightPanelStyle: rightPanelStyle,
 	})
 
+	ti := textarea.New()
+	ti.Placeholder = "Write your comment..."
+	ti.CharLimit = 0
+
 	return Model{
 		Shell:            s,
 		Details:          &det,
+		Input:            ti,
 		client:           client,
 		filterPopover:    popover.NewFilter(theme),
 		confirmPopover:   popover.NewConfirm(theme),

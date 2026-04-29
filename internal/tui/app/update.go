@@ -10,6 +10,7 @@ import (
 	jirafExec "github.com/felipeospina21/jiraf/internal/exec"
 	"github.com/felipeospina21/jiraf/internal/jira"
 	"github.com/felipeospina21/jiraf/internal/tui/boards"
+	"github.com/felipeospina21/jiraf/internal/tui/details"
 	"github.com/felipeospina21/jiraf/internal/tui/issues"
 	"github.com/felipeospina21/tuishell"
 )
@@ -22,6 +23,11 @@ type TransitionsFetchedMsg struct {
 
 // TransitionDoneMsg carries the result of executing a transition.
 type TransitionDoneMsg struct {
+	Err error
+}
+
+// CommentAddedMsg carries the result of adding a comment.
+type CommentAddedMsg struct {
 	Err error
 }
 
@@ -86,6 +92,54 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+	case details.CommentMsg:
+		m.pendingComment = msg.IssueKey
+		return m, tea.Batch(
+			func() tea.Msg {
+				return tuishell.OpenModalMsg{
+					Header:  fmt.Sprintf("Comment on %s", msg.IssueKey),
+					Content: m.Input.View(),
+				}
+			},
+			m.Input.Focus(),
+		)
+
+	case tuishell.ShellSubmitMsg:
+		if m.pendingComment != "" {
+			body := m.Input.Value()
+			if body == "" {
+				return m, nil
+			}
+			m.Input.Blur()
+			m.confirmPopover.Open(
+				"Add Comment",
+				fmt.Sprintf("Post comment on %s?", m.pendingComment),
+				"Submit",
+				"Cancel",
+			)
+			return m, nil
+		}
+
+	case tuishell.CloseModalMsg:
+		m.Input.Blur()
+		m.Input.Reset()
+		m.pendingComment = ""
+
+	case CommentAddedMsg:
+		if msg.Err != nil {
+			return m, func() tea.Msg {
+				return tuishell.FinishTaskMsg{Err: msg.Err}
+			}
+		}
+		return m, tea.Batch(
+			func() tea.Msg {
+				return tuishell.FinishTaskMsg{Err: nil, Keybinds: details.Keybinds}
+			},
+			func() tea.Msg {
+				return tuishell.SetStatusMsg{Content: "✓ Comment added"}
+			},
+		)
+
 	case issues.TransitionMsg:
 		m.pendingTransition = msg.Issue.Key
 		return m, func() tea.Msg {
@@ -122,6 +176,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tuishell.ConfirmPopoverYesMsg:
 		m.confirmPopover.Close()
+		if m.pendingComment != "" {
+			issueKey := m.pendingComment
+			body := m.Input.Value()
+			m.pendingComment = ""
+			m.Input.Reset()
+			return m, func() tea.Msg {
+				return tuishell.StartTaskMsg{Cmd: m.addComment(issueKey, body)}
+			}
+		}
 		issueKey := m.pendingTransition
 		transitionID := m.transitionIDByName[m.pendingTransitionName]
 		m.pendingTransition = ""
@@ -133,6 +196,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tuishell.ConfirmPopoverNoMsg:
 		m.confirmPopover.Close()
+		if m.pendingComment != "" {
+			m.pendingComment = ""
+			m.Input.Reset()
+		}
 		m.pendingTransition = ""
 		m.pendingTransitionName = ""
 		m.transitionIDByName = nil
@@ -272,8 +339,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	// Route keys to textarea when focused (comment modal)
+	var cmds []tea.Cmd
+	if m.Input.Focused() {
+		var cmd tea.Cmd
+		m.Input, cmd = m.Input.Update(msg)
+		m.Shell.Modal.Content = m.Input.View()
+		cmds = append(cmds, cmd)
+	}
+
 	var cmd tea.Cmd
 	m.Shell, cmd = m.Shell.Update(msg)
+	cmds = append(cmds, cmd)
 	m.syncKeybinds()
 
 	// Sync panel pointer after shell update
@@ -287,7 +364,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Shell.Main = main
 	}
 
-	return m, cmd
+	return m, tea.Batch(cmds...)
 }
 
 func buildFilterSections(statuses, priorities, types map[string]bool, active jira.IssueFilters) []tuishell.FilterSection {

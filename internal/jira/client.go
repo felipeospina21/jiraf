@@ -56,6 +56,15 @@ func (c *Client) post(path string, body any) error {
 	return nil
 }
 
+// AddComment posts a comment on an issue.
+func (c *Client) AddComment(issueKey, body string) error {
+	if c.demoMode {
+		time.Sleep(500 * time.Millisecond)
+		return nil
+	}
+	return c.post(fmt.Sprintf("/rest/api/2/issue/%s/comment", issueKey), map[string]string{"body": body})
+}
+
 func (c *Client) get(path string, out any) error {
 	req, err := http.NewRequest("GET", c.baseURL+path, nil)
 	if err != nil {

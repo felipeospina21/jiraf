@@ -18,6 +18,11 @@ import (
 	"github.com/felipeospina21/tuishell/table"
 )
 
+// CommentMsg is sent when the user wants to add a comment to an issue.
+type CommentMsg struct {
+	IssueKey string
+}
+
 // Model holds the state for the details side panel.
 type Model struct {
 	Viewport viewport.Model
@@ -54,6 +59,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		switch {
 		case match(Keybinds.Fullscreen):
 			return m, func() tea.Msg { return tuishell.ToggleFullscreenMsg{} }
+		case match(Keybinds.Comment):
+			if m.issue != nil {
+				issueKey := m.issue.Key
+				return m, func() tea.Msg { return CommentMsg{IssueKey: issueKey} }
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
