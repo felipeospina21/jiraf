@@ -26,7 +26,7 @@ go run . -dev
 
 **Every pull request must reference an existing GitHub issue.**
 
-1. Check [existing issues](https://github.com/felipeospina21/jiraf/issues) or the [ROADMAP.md](ROADMAP.md) for known tasks
+1. Check [existing issues](https://github.com/felipeospina21/jiraf/issues) for known tasks
 2. If no issue exists for your change, **create one first** and wait for feedback before starting work
 3. In your PR description, reference the issue (e.g. `Closes #42` or `Fixes #42`)
 
