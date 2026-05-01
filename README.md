@@ -10,6 +10,8 @@
 
 jiraf is a TUI to manage Jira issues from the command line. Built on [tuishell](https://github.com/felipeospina21/tuishell).
 
+![gif](docs/assets/demo.gif)
+
 ### Why "jiraf"?
 
 **ji**ra + **f**etch = **jiraf** — and it sounds like _giraffe_ 🦒, because sometimes you need a long neck to see across all your Jira boards.
@@ -83,16 +85,16 @@ jiraf -dev
 
 ### Issues panel
 
-| Key   | Action          |
-| ----- | --------------- |
-| `↑/k` | Move up         |
-| `↓/j` | Move down       |
-| `enter/l` | View details |
-| `x`   | Open in browser |
-| `T`   | Transition status |
-| `r`   | Refetch issues  |
-| `/`   | Open filter     |
-| `F`   | Clear filters   |
+| Key       | Action            |
+| --------- | ----------------- |
+| `↑/k`     | Move up           |
+| `↓/j`     | Move down         |
+| `enter/l` | View details      |
+| `x`       | Open in browser   |
+| `T`       | Transition status |
+| `r`       | Refetch issues    |
+| `/`       | Open filter       |
+| `F`       | Clear filters     |
 
 ## Config
 
@@ -106,11 +108,11 @@ export JIRAF_TOKEN="YOUR_JIRA_API_TOKEN"
 
 ### Config properties
 
-| Option           | Description           | Default | Required |
-| ---------------- | --------------------- | ------- | -------- |
-| `base_url`       | Jira instance URL     | —       | Yes      |
-| `filters.boards` | List of board objects  | —       | Yes      |
-| `theme`          | Color overrides (see [Theme](#theme)) | Jira blue | No |
+| Option           | Description                           | Default   | Required |
+| ---------------- | ------------------------------------- | --------- | -------- |
+| `base_url`       | Jira instance URL                     | —         | Yes      |
+| `filters.boards` | List of board objects                 | —         | Yes      |
+| `theme`          | Color overrides (see [Theme](#theme)) | Jira blue | No       |
 
 ### Board object
 
@@ -128,15 +130,15 @@ You can customize the color theme by adding a `[theme]` section to your config f
 
 **Presets:** Use a preconfigured palette by name. Individual overrides can be combined with a preset.
 
-| Preset                 | Description                  |
-| ---------------------- | ---------------------------- |
-| `catppuccin-mocha`     | Catppuccin Mocha (dark)      |
-| `catppuccin-macchiato` | Catppuccin Macchiato         |
-| `catppuccin-frappe`    | Catppuccin Frappé            |
-| `catppuccin-latte`     | Catppuccin Latte (light)     |
-| `rose-pine`            | Rosé Pine                    |
-| `tokyo-night`          | Tokyo Night                  |
-| `dracula`              | Dracula                      |
+| Preset                 | Description              |
+| ---------------------- | ------------------------ |
+| `catppuccin-mocha`     | Catppuccin Mocha (dark)  |
+| `catppuccin-macchiato` | Catppuccin Macchiato     |
+| `catppuccin-frappe`    | Catppuccin Frappé        |
+| `catppuccin-latte`     | Catppuccin Latte (light) |
+| `rose-pine`            | Rosé Pine                |
+| `tokyo-night`          | Tokyo Night              |
+| `dracula`              | Dracula                  |
 
 ```toml
 [theme]
@@ -145,37 +147,37 @@ preset = "catppuccin-mocha"
 
 **Individual overrides:** Each property accepts a hex color string. Only the tokens you specify are overridden — everything else falls back to the preset (or the default Jira blue palette if no preset is set).
 
-| Token             | Description                        | Default   |
-| ----------------- | ---------------------------------- | --------- |
-| `primary`         | Primary accent color               | `#2684FF` |
-| `primary_bright`  | Brighter primary variant           | `#8AC4FF` |
-| `primary_fg`      | Foreground on primary backgrounds  | `#DEEBFF` |
-| `primary_dim`     | Dimmed primary for subtle accents  | `#002B6B` |
-| `info`            | Informational color                | `#4C9AFF` |
-| `info_bright`     | Brighter info variant              | `#2684FF` |
-| `success`         | Success / positive state           | `#6beaaf` |
-| `success_bright`  | Brighter success variant           | `#3ad994` |
-| `danger`          | Error / destructive state          | `#f9a8a8` |
-| `danger_bright`   | Brighter danger variant            | `#f47575` |
-| `warning`         | Warning state                      | `#ffe043` |
-| `warning_bright`  | Brighter warning variant           | `#ffcc14` |
-| `caution`         | Caution / attention state          | `#ff8237` |
-| `text`            | Default text color                 | `#C4C4C4` |
-| `text_inverse`    | Text on light backgrounds          | `#111`    |
-| `text_dimmed`     | Dimmed / secondary text            | `#777777` |
-| `muted`           | Muted text                         | `#999999` |
-| `dim`             | Dimmed UI elements                 | `#444444` |
-| `border`          | Panel borders                      | `#3f4145` |
-| `modal_border`    | Modal overlay border               | `#666666` |
-| `surface_dim`     | Dark surface background            | `#091E42` |
-| `selection_border`| Selected item border               | `#0052CC` |
-| `status_text`     | Status bar text                    | `#FFFDF5` |
-| `status_normal`   | Status bar normal mode             | `#0747A6` |
-| `status_loading`  | Status bar loading state           | `#1A7A94` |
-| `status_error`    | Status bar error state             | `#CE3060` |
-| `status_dev`      | Status bar dev mode indicator      | `#4E8212` |
-| `status_accent1`  | Status bar accent 1                | `#0065FF` |
-| `status_accent2`  | Status bar accent 2                | `#003884` |
+| Token              | Description                       | Default   |
+| ------------------ | --------------------------------- | --------- |
+| `primary`          | Primary accent color              | `#2684FF` |
+| `primary_bright`   | Brighter primary variant          | `#8AC4FF` |
+| `primary_fg`       | Foreground on primary backgrounds | `#DEEBFF` |
+| `primary_dim`      | Dimmed primary for subtle accents | `#002B6B` |
+| `info`             | Informational color               | `#4C9AFF` |
+| `info_bright`      | Brighter info variant             | `#2684FF` |
+| `success`          | Success / positive state          | `#6beaaf` |
+| `success_bright`   | Brighter success variant          | `#3ad994` |
+| `danger`           | Error / destructive state         | `#f9a8a8` |
+| `danger_bright`    | Brighter danger variant           | `#f47575` |
+| `warning`          | Warning state                     | `#ffe043` |
+| `warning_bright`   | Brighter warning variant          | `#ffcc14` |
+| `caution`          | Caution / attention state         | `#ff8237` |
+| `text`             | Default text color                | `#C4C4C4` |
+| `text_inverse`     | Text on light backgrounds         | `#111`    |
+| `text_dimmed`      | Dimmed / secondary text           | `#777777` |
+| `muted`            | Muted text                        | `#999999` |
+| `dim`              | Dimmed UI elements                | `#444444` |
+| `border`           | Panel borders                     | `#3f4145` |
+| `modal_border`     | Modal overlay border              | `#666666` |
+| `surface_dim`      | Dark surface background           | `#091E42` |
+| `selection_border` | Selected item border              | `#0052CC` |
+| `status_text`      | Status bar text                   | `#FFFDF5` |
+| `status_normal`    | Status bar normal mode            | `#0747A6` |
+| `status_loading`   | Status bar loading state          | `#1A7A94` |
+| `status_error`     | Status bar error state            | `#CE3060` |
+| `status_dev`       | Status bar dev mode indicator     | `#4E8212` |
+| `status_accent1`   | Status bar accent 1               | `#0065FF` |
+| `status_accent2`   | Status bar accent 2               | `#003884` |
 
 ### Config example
 
