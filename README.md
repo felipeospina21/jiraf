@@ -62,9 +62,14 @@ jiraf -demo
 - View issues by board with sprint filtering
 - Filter issues server-side by status, priority, type, and sprint number
 - View issue details with markdown rendering and comments
+- Add comments to issues with confirmation
 - Transition issue status with confirmation
 - Open issues in browser
+- Fullscreen details view
+- Copy modal content to clipboard
+- Demo mode with mocked data (`-demo` flag)
 - Custom theme colors via config with preset support
+- Full-screen help modal with all keybindings
 - Navigate between boards and issues panels
 
 ## Keybindings
