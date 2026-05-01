@@ -48,12 +48,12 @@ Launch the TUI:
 jiraf
 ```
 
-### Dev mode
+### Demo mode
 
 Run with mocked data (no API calls):
 
 ```bash
-jiraf -dev
+jiraf -demo
 ```
 
 ## Features
@@ -71,17 +71,22 @@ jiraf -dev
 
 ### Global
 
-| Key      | Action            |
-| -------- | ----------------- |
-| `?`      | Toggle help       |
-| `ctrl+c` | Quit              |
-| `ctrl+o` | Toggle side panel |
+| Key      | Action                  |
+| -------- | ----------------------- |
+| `?`      | Toggle help             |
+| `ctrl+c` | Quit                    |
+| `ctrl+o` | Toggle side panel       |
+| `@`      | Open full message modal |
+| `esc`    | Close panel             |
 
 ### Boards panel
 
-| Key     | Action      |
-| ------- | ----------- |
-| `enter` | View issues |
+| Key     | Action       |
+| ------- | ------------ |
+| `↑/k`   | Move up      |
+| `↓/j`   | Move down    |
+| `enter` | View issues  |
+| `/`     | Filter       |
 
 ### Issues panel
 
@@ -95,6 +100,21 @@ jiraf -dev
 | `r`       | Refetch issues    |
 | `/`       | Open filter       |
 | `F`       | Clear filters     |
+
+### Details panel
+
+| Key  | Action              |
+| ---- | ------------------- |
+| `f`  | Toggle fullscreen   |
+| `C`  | Add comment         |
+
+### Modal / Comment
+
+| Key      | Action      |
+| -------- | ----------- |
+| `esc`    | Close modal |
+| `ctrl+s` | Submit      |
+| `ctrl+y` | Copy        |
 
 ## Config
 
