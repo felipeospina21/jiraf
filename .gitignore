@@ -6,3 +6,4 @@ go.work
 go.work.sum
 c.out
 dist/
+.DS_Store
